@@ -4,13 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5a2e6456-7a6c-4d1e-9a5d-569fce962331" name="更改" comment="feat: initialize the repository&#10;&#10;this repo">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/流体大作业.iml" afterDir="false" />
+    <list default="true" id="5a2e6456-7a6c-4d1e-9a5d-569fce962331" name="更改" comment="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ball_trajectory.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pingpong_sim.py" beforeDir="false" afterPath="$PROJECT_DIR$/pingpong_sim.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/racket_trajectory_A.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/racket_trajectory_B.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trajectory.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/trajectory.mp4" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +34,9 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Python.pingpong_sim.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -42,14 +47,6 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="SharedIndexes">
-    <attachedChunks>
-      <set>
-        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-PY-243.21565.199" />
-        <option value="bundled-python-sdk-cab1f2013843-4ae2d6a61b08-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.21565.199" />
-      </set>
-    </attachedChunks>
-  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="默认任务">
@@ -60,10 +57,33 @@
       <updated>1764316938069</updated>
       <workItem from="1764316939042" duration="1791000" />
       <workItem from="1764333030898" duration="497000" />
+      <workItem from="1764333977608" duration="63000" />
+      <workItem from="1764334052409" duration="47000" />
+      <workItem from="1764334107221" duration="116000" />
+      <workItem from="1764334235381" duration="60000" />
+      <workItem from="1764334297588" duration="70000" />
+      <workItem from="1764334381392" duration="641000" />
+      <workItem from="1764335058077" duration="1456000" />
     </task>
+    <task id="LOCAL-00001" summary="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball">
+      <option name="closed" value="true" />
+      <created>1764334012989</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1764334012989</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/$pingpong_sim.coverage" NAME="pingpong_sim 覆盖结果" MODIFIED="1764334855998" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

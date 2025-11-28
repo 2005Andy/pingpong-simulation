@@ -15,7 +15,9 @@ import argparse
 import copy
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -98,6 +100,9 @@ ANIM_SKIP: int = 100  # use every Nth frame for animation
 # Default scenario name
 DEFAULT_SCENARIO: str = "serve"
 
+# Default output directory
+DEFAULT_OUTPUT_DIR: str = "./output"
+
 
 # =============================================================================
 # Enumerations
@@ -169,6 +174,20 @@ class Net:
 
 
 @dataclass
+class RacketMovement:
+    """State of racket movement for smooth transitions."""
+    is_moving: bool = False
+    target_position: Optional[np.ndarray] = None
+    target_normal: Optional[np.ndarray] = None
+    target_velocity: Optional[np.ndarray] = None
+    start_position: Optional[np.ndarray] = None
+    start_normal: Optional[np.ndarray] = None
+    movement_time: float = 0.0  # total time for movement
+    elapsed_time: float = 0.0   # time elapsed in movement
+    racket_speed: float = 3.0   # m/s, speed at which racket moves to position
+
+
+@dataclass
 class RacketState:
     """State of a racket at a given time."""
     position: np.ndarray   # center position, shape (3,)
@@ -179,6 +198,7 @@ class RacketState:
     restitution: float
     friction: float
     player: Player
+    movement: RacketMovement = field(default_factory=RacketMovement)  # movement state
 
     def copy(self) -> "RacketState":
         return RacketState(
@@ -190,6 +210,17 @@ class RacketState:
             restitution=self.restitution,
             friction=self.friction,
             player=self.player,
+            movement=RacketMovement(
+                is_moving=self.movement.is_moving,
+                target_position=self.movement.target_position.copy() if self.movement.target_position is not None else None,
+                target_normal=self.movement.target_normal.copy() if self.movement.target_normal is not None else None,
+                target_velocity=self.movement.target_velocity.copy() if self.movement.target_velocity is not None else None,
+                start_position=self.movement.start_position.copy() if self.movement.start_position is not None else None,
+                start_normal=self.movement.start_normal.copy() if self.movement.start_normal is not None else None,
+                movement_time=self.movement.movement_time,
+                elapsed_time=self.movement.elapsed_time,
+                racket_speed=self.movement.racket_speed,
+            ),
         )
 
 
@@ -530,6 +561,56 @@ def check_table_bounds(pos: np.ndarray, table: Table) -> bool:
     half_len = table.length / 2.0
     half_wid = table.width / 2.0
     return (-half_len <= pos[0] <= half_len) and (-half_wid <= pos[1] <= half_wid)
+
+
+def start_racket_movement(racket: RacketState, target_state: RacketState) -> None:
+    """Start smooth movement of racket to target position."""
+    distance = np.linalg.norm(target_state.position - racket.position)
+    if distance < 1e-6:
+        # Already at target position
+        racket.movement.is_moving = False
+        return
+
+    racket.movement.is_moving = True
+    racket.movement.target_position = target_state.position.copy()
+    racket.movement.target_normal = target_state.normal.copy()
+    racket.movement.target_velocity = target_state.velocity.copy()
+    racket.movement.start_position = racket.position.copy()
+    racket.movement.start_normal = racket.normal.copy()
+    racket.movement.movement_time = distance / racket.movement.racket_speed
+    racket.movement.elapsed_time = 0.0
+
+
+def update_racket_movement(racket: RacketState, dt: float) -> None:
+    """Update racket position during smooth movement."""
+    if not racket.movement.is_moving:
+        return
+
+    racket.movement.elapsed_time += dt
+
+    if racket.movement.elapsed_time >= racket.movement.movement_time:
+        # Movement complete
+        racket.position = racket.movement.target_position.copy()
+        racket.normal = racket.movement.target_normal.copy()
+        racket.velocity = racket.movement.target_velocity.copy()
+        racket.movement.is_moving = False
+    else:
+        # Interpolate position and orientation
+        t = racket.movement.elapsed_time / racket.movement.movement_time
+        # Smooth interpolation using ease-in-out
+        t_smooth = t * t * (3.0 - 2.0 * t)
+
+        racket.position = (1.0 - t_smooth) * racket.movement.start_position + t_smooth * racket.movement.target_position
+        racket.normal = (1.0 - t_smooth) * racket.movement.start_normal + t_smooth * racket.movement.target_normal
+        # Renormalize normal vector
+        racket.normal = racket.normal / np.linalg.norm(racket.normal)
+
+        # Velocity is towards target
+        if racket.movement.target_position is not None and racket.movement.start_position is not None:
+            direction = racket.movement.target_position - racket.movement.start_position
+            dist = np.linalg.norm(direction)
+            if dist > 1e-6:
+                racket.velocity = (direction / dist) * racket.movement.racket_speed
 
 
 # =============================================================================
@@ -945,6 +1026,10 @@ def simulate(
 
     # Main simulation loop
     while t <= max_time:
+        # Update racket movements
+        update_racket_movement(racket_a, dt)
+        update_racket_movement(racket_b, dt)
+
         # Record state at intervals
         if step_count % record_interval == 0:
             record_state()
@@ -989,36 +1074,47 @@ def simulate(
 
         # 3. Check racket collisions
         # Player A hits when ball is on their side and moving towards them
-        if stroke_idx_a < len(strokes_a):
+        if stroke_idx_a < len(strokes_a) and not racket_a.movement.is_moving:
             stroke_a = strokes_a[stroke_idx_a]
             if should_player_hit(new_ball.position, new_ball.velocity, Player.A, stroke_a):
-                # Update racket A for this stroke
-                racket_a = compute_racket_for_stroke(
+                # Start racket A movement to strike position
+                target_racket_a = compute_racket_for_stroke(
                     new_ball.position, new_ball.velocity,
                     stroke_a, Player.A, table.height
                 )
-                # Check collision
-                if handle_circular_racket_collision(new_ball, racket_a):
-                    rally_count += 1
-                    stroke_idx_a += 1
-                    last_hitter = Player.A
-                    events.append((t, EventType.RACKET_A_HIT, f"Player A hit (rally #{rally_count})"))
-                    current_event = EventType.RACKET_A_HIT
+                start_racket_movement(racket_a, target_racket_a)
 
         # Player B hits when ball is on their side and moving towards them
-        if stroke_idx_b < len(strokes_b):
+        if stroke_idx_b < len(strokes_b) and not racket_b.movement.is_moving:
             stroke_b = strokes_b[stroke_idx_b]
             if should_player_hit(new_ball.position, new_ball.velocity, Player.B, stroke_b):
-                racket_b = compute_racket_for_stroke(
+                # Start racket B movement to strike position
+                target_racket_b = compute_racket_for_stroke(
                     new_ball.position, new_ball.velocity,
                     stroke_b, Player.B, table.height
                 )
-                if handle_circular_racket_collision(new_ball, racket_b):
-                    rally_count += 1
-                    stroke_idx_b += 1
-                    last_hitter = Player.B
-                    events.append((t, EventType.RACKET_B_HIT, f"Player B hit (rally #{rally_count})"))
-                    current_event = EventType.RACKET_B_HIT
+                start_racket_movement(racket_b, target_racket_b)
+
+        # Check for collisions (rackets can be moving)
+        if stroke_idx_a < len(strokes_a):
+            if handle_circular_racket_collision(new_ball, racket_a):
+                rally_count += 1
+                stroke_idx_a += 1
+                last_hitter = Player.A
+                # Stop racket movement after collision
+                racket_a.movement.is_moving = False
+                events.append((t, EventType.RACKET_A_HIT, f"Player A hit (rally #{rally_count})"))
+                current_event = EventType.RACKET_A_HIT
+
+        if stroke_idx_b < len(strokes_b):
+            if handle_circular_racket_collision(new_ball, racket_b):
+                rally_count += 1
+                stroke_idx_b += 1
+                last_hitter = Player.B
+                # Stop racket movement after collision
+                racket_b.movement.is_moving = False
+                events.append((t, EventType.RACKET_B_HIT, f"Player B hit (rally #{rally_count})"))
+                current_event = EventType.RACKET_B_HIT
 
         # Update event in history
         if current_event != EventType.NONE and len(ball_history["event"]) > 0:
@@ -1304,6 +1400,12 @@ Examples:
         help="Scenario type (default: serve)",
     )
     parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=DEFAULT_OUTPUT_DIR,
+        help="Output directory for data and video files (default: ./output)",
+    )
+    parser.add_argument(
         "--ball-csv",
         type=str,
         default=DEFAULT_BALL_CSV,
@@ -1371,6 +1473,18 @@ def main() -> None:
     """Main entry point."""
     args = parse_args()
 
+    # Create output directories
+    output_dir = Path(args.output_dir)
+    data_dir = output_dir / "data"
+    video_dir = output_dir / "video"
+
+    data_dir.mkdir(parents=True, exist_ok=True)
+    video_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"Output directory: {output_dir}")
+    print(f"Data files will be saved to: {data_dir}")
+    print(f"Video files will be saved to: {video_dir}")
+
     # Create table and net
     table = create_table()
     net = create_net()
@@ -1411,14 +1525,15 @@ def main() -> None:
     print_simulation_summary(result)
 
     # Save data
-    save_ball_history_to_csv(result.ball_history, args.ball_csv)
-    print(f"Saved ball trajectory to {args.ball_csv}")
+    ball_csv_path = data_dir / args.ball_csv
+    save_ball_history_to_csv(result.ball_history, str(ball_csv_path))
+    print(f"Saved ball trajectory to {ball_csv_path}")
 
     # Save racket trajectories
-    racket_a_file = args.racket_csv.replace(".csv", "_A.csv")
-    racket_b_file = args.racket_csv.replace(".csv", "_B.csv")
-    save_racket_history_to_csv(result.racket_a_history, racket_a_file)
-    save_racket_history_to_csv(result.racket_b_history, racket_b_file)
+    racket_a_file = data_dir / args.racket_csv.replace(".csv", "_A.csv")
+    racket_b_file = data_dir / args.racket_csv.replace(".csv", "_B.csv")
+    save_racket_history_to_csv(result.racket_a_history, str(racket_a_file))
+    save_racket_history_to_csv(result.racket_b_history, str(racket_b_file))
     print(f"Saved racket A trajectory to {racket_a_file}")
     print(f"Saved racket B trajectory to {racket_b_file}")
 
@@ -1428,8 +1543,8 @@ def main() -> None:
         plt.show()
 
     if not args.no_animate:
-        anim_file = DEFAULT_ANIM_FILE
-        animate_trajectory_3d(result, table, net, anim_file)
+        anim_file = video_dir / DEFAULT_ANIM_FILE
+        animate_trajectory_3d(result, table, net, str(anim_file))
 
 
 if __name__ == "__main__":
