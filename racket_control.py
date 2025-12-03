@@ -5,12 +5,14 @@ decision-making for when to hit the ball.
 """
 
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Any, Optional
 
 from constants import (
     RACKET_RADIUS, RUBBER_INVERTED_RESTITUTION, RUBBER_INVERTED_FRICTION,
     RUBBER_PIMPLED_RESTITUTION, RUBBER_PIMPLED_FRICTION,
-    RUBBER_ANTISPIN_RESTITUTION, RUBBER_ANTISPIN_FRICTION
+    RUBBER_ANTISPIN_RESTITUTION, RUBBER_ANTISPIN_FRICTION,
+    TABLE_LENGTH, TABLE_HEIGHT, BALL_RADIUS,
+    RACKET_STRIKE_HEIGHT_WINDOW, RACKET_STRIKE_X_WINDOW
 )
 from ball_types import RubberType, Player, StrokeParams, RacketState
 
@@ -25,51 +27,149 @@ def get_rubber_properties(rubber_type: RubberType) -> Tuple[float, float]:
         return RUBBER_ANTISPIN_RESTITUTION, RUBBER_ANTISPIN_FRICTION
 
 
+STROKE_MODALITIES: Dict[str, Dict[str, Any]] = {
+    "drop_short": {
+        "angle_deg_range": (110.0, 130.0),
+        "strike_height": 0.04,
+        "swing_speed_range": (1.2, 1.8),
+        "direction": (0.25, 0.0, -0.04),
+        "spin": "backspin",
+        "contact_offset": (0.0, 0.0, -0.015),
+        "target_x_offset": 0.12,
+    },
+    "flick": {
+        "angle_deg_range": (80.0, 95.0),
+        "strike_height": 0.10,
+        "swing_speed_range": (0.1, 0.5),
+        "direction": (0.1, 0.05, 0.1),
+        "spin": "topspin",
+        "contact_offset": (0.0, 0.0, -0.005),
+        "target_x_offset": 0.18,
+    },
+    "counter_loop": {
+        "angle_deg_range": (30.0, 50.0),
+        "strike_height": 0.22,
+        "swing_speed_range": (9.0, 12.0),
+        "direction": (1.0, 0.0, -0.15),
+        "spin": "topspin",
+        "contact_offset": (0.0, 0.0, 0.015),
+        "target_x_offset": 0.32,
+    },
+    # Legacy stroke names preserved for compatibility
+    "topspin": {
+        "angle_deg": 105.0,
+        "strike_height": 0.25,
+        "swing_speed": 8.0,
+        "direction": (1.0, 0.0, 0.3),
+        "spin": "topspin",
+        "target_x_offset": 0.30,
+    },
+    "backspin": {
+        "angle_deg": 70.0,
+        "strike_height": 0.20,
+        "swing_speed": 5.0,
+        "direction": (1.0, 0.0, -0.25),
+        "spin": "backspin",
+        "target_x_offset": 0.28,
+    },
+    "sidespin": {
+        "angle_deg": 100.0,
+        "strike_height": 0.24,
+        "swing_speed": 7.0,
+        "direction": (1.0, 0.5, 0.25),
+        "spin": "sidespin",
+        "target_x_offset": 0.30,
+    },
+    "flat": {
+        "angle_deg": 90.0,
+        "strike_height": 0.23,
+        "swing_speed": 0.1,
+        "direction": (0.1, 0.0, 0.05),
+        "spin": "flat",
+        "target_x_offset": 0.28,
+    },
+    "custom": {},  # fully user-specified
+}
+
+
+def _resolve_range(value: Optional[Tuple[float, float]], fallback: float) -> float:
+    if value is None:
+        return fallback
+    if isinstance(value, (tuple, list)) and len(value) == 2:
+        return 0.5 * (value[0] + value[1])
+    return float(value)
+
+
+def _orient_vector(vec: Any, player: Player, normalize: bool = False) -> np.ndarray:
+    arr = np.asarray(vec, dtype=float)
+    if player == Player.B:
+        arr = np.array([-arr[0], -arr[1], arr[2]], dtype=float)
+    if normalize:
+        norm = np.linalg.norm(arr)
+        if norm > 1.0e-8:
+            arr = arr / norm
+    return arr
+
+
+def _deg_from_plane(angle_deg: float) -> float:
+    """Convert paddle angle measured from table plane to radians relative to vertical."""
+    return np.radians(angle_deg - 90.0)
+
+
+def create_stroke_from_mode(
+    player: Player,
+    mode: str = "topspin",
+    rubber_type: RubberType = RubberType.INVERTED,
+    overrides: Optional[Dict[str, Any]] = None,
+) -> StrokeParams:
+    """Create a stroke that follows a given modality."""
+    overrides = overrides or {}
+    profile = STROKE_MODALITIES.get(mode)
+    if profile is None:
+        raise ValueError(f"Unknown stroke mode '{mode}'")
+
+    angle_deg = overrides.get(
+        "angle_deg",
+        profile.get("angle_deg", _resolve_range(profile.get("angle_deg_range"), 90.0)),
+    )
+    strike_height = overrides.get("strike_height", profile.get("strike_height", 0.25))
+    swing_speed = overrides.get(
+        "swing_speed",
+        profile.get("swing_speed", _resolve_range(profile.get("swing_speed_range"), 6.0)),
+    )
+    direction = overrides.get("direction", profile.get("direction", (1.0, 0.0, 0.3)))
+    swing_direction = _orient_vector(direction, player, normalize=True)
+
+    contact_offset = overrides.get("contact_offset", profile.get("contact_offset", (0.0, 0.0, 0.0)))
+    contact_offset_vec = _orient_vector(contact_offset, player, normalize=False)
+
+    target_x = overrides.get("target_x")
+    if target_x is None:
+        offset = profile.get("target_x_offset", 0.3 * TABLE_LENGTH)
+        target_x = -offset if player == Player.A else offset
+
+    spin_intent = overrides.get("spin_intent", profile.get("spin", mode))
+
+    return StrokeParams(
+        target_x=target_x,
+        strike_height=float(strike_height),
+        racket_angle=_deg_from_plane(float(angle_deg)),
+        swing_speed=float(swing_speed),
+        swing_direction=swing_direction,
+        rubber_type=rubber_type,
+        spin_intent=spin_intent,
+        mode=mode,
+        contact_offset=contact_offset_vec,
+    )
+
+
 def create_default_stroke(
     player: Player,
     stroke_type: str = "topspin",
     rubber_type: RubberType = RubberType.INVERTED,
 ) -> StrokeParams:
-    """Create a default stroke configuration for a player."""
-    from constants import TABLE_LENGTH  # Import here to avoid circular imports
-
-    # Determine x position based on player
-    if player == Player.A:
-        target_x = -TABLE_LENGTH * 0.3
-        swing_dir = np.array([1.0, 0.0, 0.3])  # towards positive x with slight upward
-    else:
-        target_x = TABLE_LENGTH * 0.3
-        swing_dir = np.array([-1.0, 0.0, 0.3])  # towards negative x with slight upward
-
-    swing_dir = swing_dir / np.linalg.norm(swing_dir)
-
-    # Adjust parameters based on stroke type
-    if stroke_type == "topspin":
-        angle = np.radians(15)  # slightly closed racket
-        speed = 8.0
-    elif stroke_type == "backspin":
-        angle = np.radians(-20)  # open racket
-        speed = 5.0
-        swing_dir[2] = -0.2  # downward component
-        swing_dir = swing_dir / np.linalg.norm(swing_dir)
-    elif stroke_type == "sidespin":
-        angle = np.radians(5)
-        speed = 7.0
-        swing_dir[1] = 0.5  # sideways component
-        swing_dir = swing_dir / np.linalg.norm(swing_dir)
-    else:  # flat
-        angle = np.radians(0)
-        speed = 10.0
-
-    return StrokeParams(
-        target_x=target_x,
-        strike_height=0.25,  # 25 cm above table (will be added to table height)
-        racket_angle=angle,
-        swing_speed=speed,
-        swing_direction=swing_dir,
-        rubber_type=rubber_type,
-        spin_intent=stroke_type,
-    )
+    """Backward-compatible wrapper that delegates to stroke modalities."""
+    return create_stroke_from_mode(player, stroke_type, rubber_type)
 
 
 def compute_racket_for_stroke(
@@ -91,15 +191,6 @@ def compute_racket_for_stroke(
     Returns:
         RacketState configured for the stroke.
     """
-    # Racket position: at the strike point
-    if player == Player.A:
-        racket_x = stroke.target_x
-        # Normal points towards positive x (towards opponent)
-        base_normal = np.array([1.0, 0.0, 0.0])
-    else:
-        racket_x = stroke.target_x
-        base_normal = np.array([-1.0, 0.0, 0.0])
-
     # Apply racket angle (rotation around y-axis)
     angle = stroke.racket_angle
     cos_a, sin_a = np.cos(angle), np.sin(angle)
@@ -109,11 +200,32 @@ def compute_racket_for_stroke(
         normal = np.array([-cos_a, 0.0, sin_a])
     normal = normal / np.linalg.norm(normal)
 
-    # Position racket at strike height, centered in y
-    racket_pos = np.array([racket_x, 0.0, table_height + stroke.strike_height])
+    # Determine strike contact point relative to current ball state
+    contact_point = np.array([
+        ball_pos[0],
+        ball_pos[1],
+        max(ball_pos[2], table_height + BALL_RADIUS * 1.05),
+    ])
+    contact_point = contact_point + stroke.contact_offset
+    racket_pos = contact_point - normal * BALL_RADIUS
 
-    # Velocity is swing direction times speed
-    velocity = stroke.swing_direction * stroke.swing_speed
+    # Velocity emphasizes swing direction but biases toward opponent's side
+    to_opponent = np.array([1.0, 0.0, 0.1]) if player == Player.A else np.array([-1.0, 0.0, 0.1])
+    incoming = ball_vel
+    incoming_norm = np.linalg.norm(incoming)
+    if incoming_norm > 1.0e-6:
+        incoming = incoming / incoming_norm
+    blended_dir = (
+        0.65 * stroke.swing_direction
+        + 0.25 * to_opponent
+        - 0.10 * incoming
+    )
+    blended_norm = np.linalg.norm(blended_dir)
+    if blended_norm > 1.0e-8:
+        swing_dir = blended_dir / blended_norm
+    else:
+        swing_dir = stroke.swing_direction
+    velocity = swing_dir * stroke.swing_speed
 
     # Get rubber properties
     restitution, friction = get_rubber_properties(stroke.rubber_type)
@@ -147,21 +259,21 @@ def should_player_hit(
     Returns:
         True if player should hit now.
     """
-    if player == Player.A:
-        # Player A hits when ball is moving towards them (negative x velocity)
-        # and ball x position is near their strike zone
-        return (
-            ball_vel[0] < 0 and
-            ball_pos[0] < stroke.target_x + 0.15 and
-            ball_pos[0] > stroke.target_x - 0.15
-        )
-    else:
-        # Player B hits when ball is moving towards them (positive x velocity)
-        return (
-            ball_vel[0] > 0 and
-            ball_pos[0] > stroke.target_x - 0.15 and
-            ball_pos[0] < stroke.target_x + 0.15
-        )
+    # Height gating: only hit when ball is near the desired strike height above table
+    desired_height = TABLE_HEIGHT + stroke.strike_height
+    height_window = RACKET_STRIKE_HEIGHT_WINDOW
+    if abs(ball_pos[2] - desired_height) > height_window:
+        return False
+
+    # Side gating: player only hits when ball is on their half of the table
+    if player == Player.A and ball_pos[0] > 0.0:
+        return False
+    if player == Player.B and ball_pos[0] < 0.0:
+        return False
+
+    # Once height and side conditions are met (and can_prepare_hit is True in the
+    # simulation state machine), the player should attempt to hit.
+    return True
 
 
 def parse_rubber_type(name: str) -> RubberType:
@@ -178,12 +290,22 @@ def parse_rubber_type(name: str) -> RubberType:
 
 
 def create_custom_strokes(
-    stroke_configs: List[Tuple[str, str]],
+    stroke_configs: List[Any],
     player: Player,
 ) -> List[StrokeParams]:
-    """Create stroke list from configuration tuples."""
-    strokes = []
-    for stroke_type, rubber_name in stroke_configs:
+    """Create stroke list from configuration tuples or dictionaries."""
+    strokes: List[StrokeParams] = []
+    for config in stroke_configs:
+        overrides: Dict[str, Any] = {}
+        if isinstance(config, tuple):
+            stroke_type, rubber_name = config
+        elif isinstance(config, dict):
+            stroke_type = config.get("mode") or config.get("stroke_type") or config.get("type") or "custom"
+            rubber_name = config.get("rubber", "inverted")
+            overrides = config.get("overrides", {})
+        else:
+            raise ValueError(f"Unsupported stroke configuration: {config}")
+
         rubber = parse_rubber_type(rubber_name)
-        strokes.append(create_default_stroke(player, stroke_type, rubber))
+        strokes.append(create_stroke_from_mode(player, stroke_type, rubber, overrides))
     return strokes

@@ -10,11 +10,12 @@ import argparse
 from pathlib import Path
 
 from constants import (
-    DEFAULT_SCENARIO, DEFAULT_OUTPUT_DIR, DEFAULT_BALL_CSV, DEFAULT_RACKET_CSV,
+    DEFAULT_OUTPUT_DIR, DEFAULT_BALL_CSV, DEFAULT_RACKET_CSV,
     DEFAULT_ANIM_FILE, TIME_STEP, MAX_TIME, CUSTOM_INITIAL_POSITION,
-    CUSTOM_INITIAL_VELOCITY, CUSTOM_INITIAL_OMEGA, CUSTOM_STROKES_A, CUSTOM_STROKES_B
+    CUSTOM_INITIAL_VELOCITY, CUSTOM_INITIAL_OMEGA, CUSTOM_STROKES_A, CUSTOM_STROKES_B,
+    DEFAULT_SERVE_MODE, DEFAULT_SERVER, DEFAULT_BALL_COLOR, DEFAULT_BALL_SIZE, DEFAULT_SCENE_MARGIN
 )
-from scenarios import create_table, create_net, create_serve_scenario, create_smash_scenario, create_custom_scenario
+from scenarios import create_table, create_net, create_custom_scenario, SERVE_MODE_CHOICES
 from simulation import simulate
 from visualization import (
     print_simulation_summary, save_ball_history_to_csv, save_racket_history_to_csv,
@@ -36,17 +37,10 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python pingpong_main.py --scenario serve
-  python pingpong_main.py --scenario smash --duration 3.0
-  python pingpong_main.py --scenario custom --pos -1.2 0 0.9 --vel 8 0 3 --omega 0 150 0
+  python pingpong_main.py --serve-mode fh_under
+  python pingpong_main.py --serve-mode fast_long --server B --duration 3.0
+  python pingpong_main.py --serve-mode custom --pos -1.2 0 0.9 --vel 8 0 3 --omega 0 150 0
         """
-    )
-    parser.add_argument(
-        "--scenario",
-        type=str,
-        default=DEFAULT_SCENARIO,
-        choices=["serve", "smash", "custom"],
-        help="Scenario type (default: serve)",
     )
     parser.add_argument(
         "--output-dir",
@@ -77,6 +71,38 @@ Examples:
         type=float,
         default=TIME_STEP,
         help="Time step size in seconds",
+    )
+    parser.add_argument(
+        "--serve-mode",
+        type=str,
+        choices=SERVE_MODE_CHOICES,
+        default=DEFAULT_SERVE_MODE,
+        help="Serve modality preset (fh_under, fast_long, custom)",
+    )
+    parser.add_argument(
+        "--server",
+        type=str,
+        choices=["A", "B"],
+        default=DEFAULT_SERVER,
+        help="Which player serves first (A on negative x, B on positive x)",
+    )
+    parser.add_argument(
+        "--ball-color",
+        type=str,
+        default=DEFAULT_BALL_COLOR,
+        help="Matplotlib color for rendering the ball",
+    )
+    parser.add_argument(
+        "--ball-size",
+        type=float,
+        default=DEFAULT_BALL_SIZE,
+        help="Marker/ball size used in plots and animations",
+    )
+    parser.add_argument(
+        "--scene-margin",
+        type=float,
+        default=DEFAULT_SCENE_MARGIN,
+        help="Extra margin around table when framing plots/animations",
     )
     parser.add_argument(
         "--no-animate",
@@ -138,23 +164,20 @@ def main() -> None:
     table = create_table()
     net = create_net()
 
-    # Create scenario
-    if args.scenario == "serve":
-        initial_ball, strokes_a, strokes_b = create_serve_scenario()
-    elif args.scenario == "smash":
-        initial_ball, strokes_a, strokes_b = create_smash_scenario()
-    else:  # custom
-        strokes_a = create_custom_strokes(CUSTOM_STROKES_A, Player.A)
-        strokes_b = create_custom_strokes(CUSTOM_STROKES_B, Player.B)
-        initial_ball, strokes_a, strokes_b = create_custom_scenario(
-            position=args.pos,
-            velocity=args.vel,
-            omega=args.omega,
-            strokes_a=strokes_a,
-            strokes_b=strokes_b,
-        )
+    server_player = Player[args.server]
+    strokes_a = create_custom_strokes(CUSTOM_STROKES_A, Player.A)
+    strokes_b = create_custom_strokes(CUSTOM_STROKES_B, Player.B)
+    initial_ball, strokes_a, strokes_b = create_custom_scenario(
+        position=args.pos,
+        velocity=args.vel,
+        omega=args.omega,
+        strokes_a=strokes_a,
+        strokes_b=strokes_b,
+        serve_mode=args.serve_mode,
+        server=server_player,
+    )
 
-    print(f"Running simulation: {args.scenario} scenario")
+    print(f"Running simulation with serve mode: {args.serve_mode} (server = Player {server_player.name})")
     print(f"Initial position: {initial_ball.position}")
     print(f"Initial velocity: {initial_ball.velocity}")
     print(f"Initial spin: {initial_ball.omega}")
@@ -168,6 +191,7 @@ def main() -> None:
         net=net,
         dt=args.dt,
         max_time=args.duration,
+        server=server_player,
     )
 
     # Print summary
@@ -188,12 +212,27 @@ def main() -> None:
 
     # Visualization
     if not args.no_plot:
-        fig = plot_trajectory_3d(result, table, net)
+        fig = plot_trajectory_3d(
+            result,
+            table,
+            net,
+            ball_color=args.ball_color,
+            ball_size=args.ball_size,
+            scene_margin=args.scene_margin,
+        )
         plt.show()
 
     if not args.no_animate:
         anim_file = video_dir / DEFAULT_ANIM_FILE
-        animate_trajectory_3d(result, table, net, str(anim_file))
+        animate_trajectory_3d(
+            result,
+            table,
+            net,
+            str(anim_file),
+            ball_color=args.ball_color,
+            ball_size=args.ball_size,
+            scene_margin=args.scene_margin,
+        )
 
 
 if __name__ == "__main__":

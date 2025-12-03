@@ -8,11 +8,11 @@ This module contains all physics-related calculations including:
 """
 
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Optional
 
 from constants import (
     AIR_DENSITY, GRAVITY, BALL_RADIUS, BALL_MASS, DRAG_COEFF, MAGNUS_COEFF,
-    BALL_INERTIA_FACTOR, WIND_VELOCITY
+    BALL_INERTIA_FACTOR, WIND_VELOCITY, RACKET_MAX_SPEED
 )
 from ball_types import BallState, Table, Net, RacketState, EventType
 
@@ -271,22 +271,17 @@ def check_table_bounds(pos: np.ndarray, table: Table) -> bool:
     return (-half_len <= pos[0] <= half_len) and (-half_wid <= pos[1] <= half_wid)
 
 
-def start_racket_movement(racket: RacketState, target_state: RacketState) -> None:
-    """Start smooth movement of racket to target position."""
-    distance = np.linalg.norm(target_state.position - racket.position)
-    if distance < 1e-6:
-        # Already at target position
-        racket.movement.is_moving = False
-        return
-
-    racket.movement.is_moving = True
-    racket.movement.target_position = target_state.position.copy()
-    racket.movement.target_normal = target_state.normal.copy()
-    racket.movement.target_velocity = target_state.velocity.copy()
-    racket.movement.start_position = racket.position.copy()
-    racket.movement.start_normal = racket.normal.copy()
-    racket.movement.movement_time = distance / racket.movement.racket_speed
-    racket.movement.elapsed_time = 0.0
+def start_racket_movement(
+    racket: RacketState,
+    target_state: RacketState,
+    desired_arrival_time: Optional[float] = None,
+) -> None:
+    """Start instant movement of racket to target position for hitting."""
+    # For hitting, move instantly to target position to ensure contact
+    racket.position = target_state.position.copy()
+    racket.normal = target_state.normal.copy()
+    racket.velocity = target_state.velocity.copy()
+    racket.movement.is_moving = False  # Mark as not moving since we're already there
 
 
 def update_racket_movement(racket: RacketState, dt: float) -> None:
@@ -294,28 +289,39 @@ def update_racket_movement(racket: RacketState, dt: float) -> None:
     if not racket.movement.is_moving:
         return
 
-    racket.movement.elapsed_time += dt
-
-    if racket.movement.elapsed_time >= racket.movement.movement_time:
-        # Movement complete
-        racket.position = racket.movement.target_position.copy()
-        racket.normal = racket.movement.target_normal.copy()
-        racket.velocity = racket.movement.target_velocity.copy()
+    if racket.movement.target_position is None or racket.movement.start_position is None:
         racket.movement.is_moving = False
+        return
+
+    racket.movement.elapsed_time += dt
+    movement_time = max(racket.movement.movement_time, 1.0e-4)
+    tau = np.clip(racket.movement.elapsed_time / movement_time, 0.0, 1.0)
+    # Quintic polynomial (smoothstep) for zero velocity endpoints
+    s = tau**3 * (10.0 + tau * (-15.0 + 6.0 * tau))
+    ds_dt = (30.0 * tau**2 - 60.0 * tau**3 + 30.0 * tau**4) / movement_time
+
+    start_pos = racket.movement.start_position
+    end_pos = racket.movement.target_position
+    path = end_pos - start_pos
+    racket.position = start_pos + s * path
+
+    start_normal = racket.movement.start_normal
+    target_normal = racket.movement.target_normal
+    if start_normal is not None and target_normal is not None:
+        interp_normal = (1.0 - s) * start_normal + s * target_normal
+        norm = np.linalg.norm(interp_normal)
+        if norm > 1.0e-8:
+            racket.normal = interp_normal / norm
+
+    if racket.movement.target_velocity is not None and racket.movement.start_velocity is not None:
+        racket.velocity = (1.0 - s) * racket.movement.start_velocity + s * racket.movement.target_velocity
     else:
-        # Interpolate position and orientation
-        t = racket.movement.elapsed_time / racket.movement.movement_time
-        # Smooth interpolation using ease-in-out
-        t_smooth = t * t * (3.0 - 2.0 * t)
+        racket.velocity = path * ds_dt
 
-        racket.position = (1.0 - t_smooth) * racket.movement.start_position + t_smooth * racket.movement.target_position
-        racket.normal = (1.0 - t_smooth) * racket.movement.start_normal + t_smooth * racket.movement.target_normal
-        # Renormalize normal vector
-        racket.normal = racket.normal / np.linalg.norm(racket.normal)
-
-        # Velocity is towards target
-        if racket.movement.target_position is not None and racket.movement.start_position is not None:
-            direction = racket.movement.target_position - racket.movement.start_position
-            dist = np.linalg.norm(direction)
-            if dist > 1e-6:
-                racket.velocity = (direction / dist) * racket.movement.racket_speed
+    if tau >= 0.999:
+        racket.position = end_pos.copy()
+        if target_normal is not None:
+            racket.normal = target_normal.copy()
+        if racket.movement.target_velocity is not None:
+            racket.velocity = racket.movement.target_velocity.copy()
+        racket.movement.is_moving = False

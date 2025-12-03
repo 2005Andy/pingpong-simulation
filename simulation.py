@@ -10,7 +10,8 @@ import numpy as np
 from constants import (
     PLAYER_A_X, PLAYER_B_X, PLAYER_STRIKE_HEIGHT, TIME_STEP, MAX_TIME,
     RECORD_INTERVAL, RACKET_RADIUS, RUBBER_INVERTED_RESTITUTION,
-    RUBBER_INVERTED_FRICTION
+    RUBBER_INVERTED_FRICTION, BALL_RADIUS,
+    RACKET_PREDICTION_DT_MULTIPLIER, RACKET_PREDICTION_MIN_DT, RACKET_PREDICTION_MAX_TIME
 )
 from ball_types import (
     BallState, Table, Net, RacketState, StrokeParams, Player, RubberType,
@@ -18,7 +19,8 @@ from ball_types import (
 )
 from physics import (
     rk4_step, handle_plane_collision, handle_circular_racket_collision,
-    check_net_collision, check_table_bounds, update_racket_movement
+    check_net_collision, check_table_bounds, update_racket_movement,
+    start_racket_movement
 )
 from racket_control import compute_racket_for_stroke, should_player_hit
 
@@ -32,6 +34,8 @@ def simulate(
     dt: float = TIME_STEP,
     max_time: float = MAX_TIME,
     record_interval: int = RECORD_INTERVAL,
+    server: Player = Player.A,
+    double_bounce_limit: int = 2,
 ) -> SimulationResult:
     """Run the simulation with dual rackets and rally tracking.
 
@@ -44,6 +48,8 @@ def simulate(
         dt: Time step.
         max_time: Maximum simulation time.
         record_interval: Record state every N steps.
+        server: Player that last touched the ball before simulation starts.
+        double_bounce_limit: Number of bounces allowed on the receiver's table before point ends.
 
     Returns:
         SimulationResult with all trajectory data and events.
@@ -98,15 +104,89 @@ def simulate(
     rally_count = 0
     stroke_idx_a = 0
     stroke_idx_b = 0
-    last_hitter: Optional[Player] = None
+    last_hitter: Optional[Player] = server
     final_event = EventType.NONE
+    print(f"Simulation started. Server: Player {server.name}, Last hitter: {last_hitter.name if last_hitter else 'None'}")
+    print(f"Player A strokes: {len(strokes_a)}")
+    print(f"Player B strokes: {len(strokes_b)}")
+    print(f"Table dimensions: {table.length:.1f}m x {table.width:.1f}m x {table.height:.1f}m")
+    print(f"Net height: {net.height:.1f}m")
+    print(f"Ball radius: {BALL_RADIUS:.1f}m")
+    print(f"Racket radius: {RACKET_RADIUS:.1f}m")
+    print(f"Time step: {dt:.0e}s, Max time: {max_time:.1f}s")
+    print(f"Initial ball position: {ball.position}")
+    print(f"Initial ball velocity: {ball.velocity}")
+    print(f"Initial ball spin: {ball.omega}")
+    winner: Optional[Player] = None
+    winner_reason = ""
+    bounce_counts = {
+        Player.A: 0,
+        Player.B: 0,
+    }
+    print(f"Initial bounce counts: A={bounce_counts[Player.A]}, B={bounce_counts[Player.B]}")
+    awaiting_first_bounce = {
+        Player.A: False,
+        Player.B: False,
+    }
+    can_prepare_hit = {
+        Player.A: False,
+        Player.B: False,
+    }
 
-    # Track which side of net the ball is on
-    ball_side_positive = ball.position[0] > 0
+    # Serve state: ball is initially served by `server`
+    is_serving_phase = True
+    server_first_bounce_done = False
 
     # Table collision parameters
     table_normal = np.array([0.0, 0.0, 1.0])
     table_point = np.array([0.0, 0.0, table.height])
+
+    def opponent(player: Player) -> Player:
+        return Player.B if player == Player.A else Player.A
+
+    def court_side_from_x(pos_x: float) -> Player:
+        return Player.B if pos_x >= 0.0 else Player.A
+
+    def reset_bounce_counts() -> None:
+        bounce_counts[Player.A] = 0
+        bounce_counts[Player.B] = 0
+
+    def _crossed_plane(x0: float, x1: float, plane_x: float, player: Player) -> bool:
+        if player == Player.A:
+            return (x0 - plane_x) >= 0.0 and (x1 - plane_x) <= 0.0
+        return (x0 - plane_x) <= 0.0 and (x1 - plane_x) >= 0.0
+
+    def predict_contact_state(
+        state: BallState,
+        player: Player,
+        stroke: StrokeParams,
+        dt_predict: float,
+        max_prediction_time: float = RACKET_PREDICTION_MAX_TIME,
+    ) -> Optional[Tuple[np.ndarray, np.ndarray, float]]:
+        """Predict when the ball will intersect the player's strike plane."""
+        direction_ok = (
+            state.velocity[0] < -0.1 if player == Player.A else state.velocity[0] > 0.1
+        )
+        if not direction_ok:
+            return None
+
+        plane_x = stroke.target_x
+        sim_state = state.copy()
+        elapsed = 0.0
+        while elapsed < max_prediction_time:
+            next_state = rk4_step(sim_state, dt_predict)
+            elapsed += dt_predict
+            if _crossed_plane(sim_state.position[0], next_state.position[0], plane_x, player):
+                denom = next_state.position[0] - sim_state.position[0]
+                alpha = 0.0 if abs(denom) < 1.0e-8 else (plane_x - sim_state.position[0]) / denom
+                alpha = np.clip(alpha, 0.0, 1.0)
+                contact_pos = sim_state.position + alpha * (next_state.position - sim_state.position)
+                contact_vel = sim_state.velocity + alpha * (next_state.velocity - sim_state.velocity)
+                contact_pos[2] = max(contact_pos[2], table.height + BALL_RADIUS * 1.05)
+                contact_time = elapsed - dt_predict + alpha * dt_predict
+                return contact_pos, contact_vel, contact_time
+            sim_state = next_state
+        return None
 
     def record_state():
         """Record current state to history."""
@@ -144,6 +224,8 @@ def simulate(
         racket_b_history["ny"].append(racket_b.normal[1])
         racket_b_history["nz"].append(racket_b.normal[2])
 
+    prediction_step = max(dt * RACKET_PREDICTION_DT_MULTIPLIER, RACKET_PREDICTION_MIN_DT)
+
     # Main simulation loop
     while t <= max_time:
         # Update racket movements
@@ -168,18 +250,41 @@ def simulate(
         if crossed:
             if net_event == EventType.NET_HIT:
                 events.append((t, net_event, "Ball hit the net"))
+                fault_player = last_hitter or server
+                winner = opponent(fault_player)
+                winner_reason = f"Player {fault_player.name} hit the net"
                 final_event = net_event
                 ball = new_ball
                 break
             elif net_event == EventType.NET_CROSS_FAIL:
                 events.append((t, net_event, "Ball failed to clear net"))
+                fault_player = last_hitter or server
+                winner = opponent(fault_player)
+                winner_reason = "Ball failed to clear the net"
                 final_event = net_event
                 ball = new_ball
                 break
             elif net_event == EventType.NET_CROSS_SUCCESS:
                 net_crossings += 1
-                ball_side_positive = new_ball.position[0] > 0
                 events.append((t, net_event, f"Ball crossed net (crossing #{net_crossings})"))
+
+                # Serve rule: during the very first crossing the ball must have
+                # bounced once on the server's court; otherwise it is a serve fault.
+                if is_serving_phase and net_crossings == 1:
+                    if not server_first_bounce_done:
+                        fault_player = server
+                        winner = opponent(fault_player)
+                        winner_reason = "Serve fault: ball did not bounce on server's court before crossing net"
+                        final_event = net_event
+                        ball = new_ball
+                        break
+                    # Valid serve: serving phase ends once ball leaves server side
+                    is_serving_phase = False
+
+                reset_bounce_counts()
+                receiver = court_side_from_x(new_ball.position[0])
+                awaiting_first_bounce[receiver] = True
+                can_prepare_hit[receiver] = False
                 current_event = net_event
 
         # 2. Check table collision
@@ -191,31 +296,98 @@ def simulate(
                 table_bounces += 1
                 events.append((t, EventType.TABLE_BOUNCE, f"Ball bounced on table (bounce #{table_bounces})"))
                 current_event = EventType.TABLE_BOUNCE
+                bounce_side = court_side_from_x(new_ball.position[0])
+                if is_serving_phase:
+                    # Serve phase: ball is still under the initial serve from `server`
+                    if bounce_side == server:
+                        # First legal bounce on server's own court
+                        if not server_first_bounce_done:
+                            server_first_bounce_done = True
+                        else:
+                            # Second bounce on server side before crossing net -> serve fault
+                            desc = f"Serve fault: ball bounced twice on Player {server.name}'s court"
+                            events.append((t, EventType.DOUBLE_BOUNCE, desc))
+                            final_event = EventType.DOUBLE_BOUNCE
+                            winner = opponent(server)
+                            winner_reason = desc
+                            ball = new_ball
+                            break
+                    else:
+                        # Defensive: bounce on receiver side while still in serving phase
+                        # Treat as invalid serve sequence
+                        desc = "Serve fault: invalid bounce sequence during serve"
+                        events.append((t, EventType.DOUBLE_BOUNCE, desc))
+                        final_event = EventType.DOUBLE_BOUNCE
+                        winner = opponent(server)
+                        winner_reason = desc
+                        ball = new_ball
+                        break
+                else:
+                    # Regular rally phase
+                    if last_hitter is None:
+                        last_hitter = server
+
+                    if bounce_side == last_hitter:
+                        # After a hit, the ball must not bounce on the hitter's own court.
+                        desc = f"Ball bounced on Player {last_hitter.name}'s own court after hit"
+                        events.append((t, EventType.DOUBLE_BOUNCE, desc))
+                        final_event = EventType.DOUBLE_BOUNCE
+                        winner = opponent(last_hitter)
+                        winner_reason = desc
+                        ball = new_ball
+                        break
+
+                    # Bounce on opponent's court
+                    receiver = bounce_side
+                    bounce_counts[receiver] += 1
+                    if bounce_counts[receiver] == 1 and awaiting_first_bounce[receiver]:
+                        # First legal bounce on receiver side -> they may prepare to hit
+                        can_prepare_hit[receiver] = True
+                        awaiting_first_bounce[receiver] = False
+                    if bounce_counts[receiver] >= double_bounce_limit:
+                        # Double bounce on receiver court -> receiver loses, last hitter wins
+                        desc = f"Ball bounced twice on Player {receiver.name}'s court"
+                        events.append((t, EventType.DOUBLE_BOUNCE, desc))
+                        final_event = EventType.DOUBLE_BOUNCE
+                        winner = last_hitter
+                        winner_reason = desc
+                        ball = new_ball
+                        break
 
         # 3. Check racket collisions
-        # Player A hits when ball is on their side and moving towards them
-        if stroke_idx_a < len(strokes_a) and not racket_a.movement.is_moving:
+        # Debug info: print every 1000 steps to avoid spam
+        if step_count % 1000 == 0:
+            print(f"t={t:.3f}s: Ball at {new_ball.position}, vel={new_ball.velocity}")
+            print(f"  Awaiting bounce: A={awaiting_first_bounce[Player.A]}, B={awaiting_first_bounce[Player.B]}")
+            print(f"  Can prepare hit: A={can_prepare_hit[Player.A]}, B={can_prepare_hit[Player.B]}")
+            print(f"  Bounce counts: A={bounce_counts[Player.A]}, B={bounce_counts[Player.B]}")
+            print(f"  Racket A pos: {racket_a.position}, moving: {racket_a.movement.is_moving}")
+            print(f"  Racket B pos: {racket_b.position}, moving: {racket_b.movement.is_moving}")
+
+        if stroke_idx_a < len(strokes_a) and can_prepare_hit[Player.A] and not racket_a.movement.is_moving:
             stroke_a = strokes_a[stroke_idx_a]
+            # For hitting, just move to current ball position if it's in strike zone
             if should_player_hit(new_ball.position, new_ball.velocity, Player.A, stroke_a):
-                # Start racket A movement to strike position
                 target_racket_a = compute_racket_for_stroke(
                     new_ball.position, new_ball.velocity,
                     stroke_a, Player.A, table.height
                 )
-                from physics import start_racket_movement
-                start_racket_movement(racket_a, target_racket_a)
+                start_racket_movement(racket_a, target_racket_a, None)  # Instant move
+                can_prepare_hit[Player.A] = False  # Prevent further movement until next rally
+                print(f"  Player A moving to hit ball at {new_ball.position}")
 
         # Player B hits when ball is on their side and moving towards them
-        if stroke_idx_b < len(strokes_b) and not racket_b.movement.is_moving:
+        if stroke_idx_b < len(strokes_b) and can_prepare_hit[Player.B] and not racket_b.movement.is_moving:
             stroke_b = strokes_b[stroke_idx_b]
+            # For hitting, just move to current ball position if it's in strike zone
             if should_player_hit(new_ball.position, new_ball.velocity, Player.B, stroke_b):
-                # Start racket B movement to strike position
                 target_racket_b = compute_racket_for_stroke(
                     new_ball.position, new_ball.velocity,
                     stroke_b, Player.B, table.height
                 )
-                from physics import start_racket_movement
-                start_racket_movement(racket_b, target_racket_b)
+                start_racket_movement(racket_b, target_racket_b, None)  # Instant move
+                can_prepare_hit[Player.B] = False  # Prevent further movement until next rally
+                print(f"  Player B moving to hit ball at {new_ball.position}")
 
         # Check for collisions (rackets can be moving)
         if stroke_idx_a < len(strokes_a):
@@ -225,8 +397,14 @@ def simulate(
                 last_hitter = Player.A
                 # Stop racket movement after collision
                 racket_a.movement.is_moving = False
+                reset_bounce_counts()
+                awaiting_first_bounce[Player.B] = True  # Next rally, B awaits first bounce
+                can_prepare_hit[Player.A] = False
+                can_prepare_hit[Player.B] = False
                 events.append((t, EventType.RACKET_A_HIT, f"Player A hit (rally #{rally_count})"))
                 current_event = EventType.RACKET_A_HIT
+                print(f"  Player A successfully hit the ball! Rally #{rally_count}")
+                print(f"    Ball after hit: pos={new_ball.position}, vel={new_ball.velocity}")
 
         if stroke_idx_b < len(strokes_b):
             if handle_circular_racket_collision(new_ball, racket_b):
@@ -235,8 +413,14 @@ def simulate(
                 last_hitter = Player.B
                 # Stop racket movement after collision
                 racket_b.movement.is_moving = False
+                reset_bounce_counts()
+                awaiting_first_bounce[Player.A] = True  # Next rally, A awaits first bounce
+                can_prepare_hit[Player.A] = False
+                can_prepare_hit[Player.B] = False
                 events.append((t, EventType.RACKET_B_HIT, f"Player B hit (rally #{rally_count})"))
                 current_event = EventType.RACKET_B_HIT
+                print(f"  Player B successfully hit the ball! Rally #{rally_count}")
+                print(f"    Ball after hit: pos={new_ball.position}, vel={new_ball.velocity}")
 
         # Update event in history
         if current_event != EventType.NONE and len(ball_history["event"]) > 0:
@@ -246,6 +430,9 @@ def simulate(
         # Ball fell below table
         if new_ball.position[2] < table.height - 0.5:
             events.append((t, EventType.OUT_OF_BOUNDS, "Ball fell below table"))
+            fault_player = last_hitter or server
+            winner = opponent(fault_player)
+            winner_reason = "Ball fell below the table surface"
             final_event = EventType.OUT_OF_BOUNDS
             ball = new_ball
             break
@@ -253,6 +440,9 @@ def simulate(
         # Ball went out of bounds (x or y)
         if abs(new_ball.position[0]) > table.length + 1.0 or abs(new_ball.position[1]) > table.width + 0.5:
             events.append((t, EventType.OUT_OF_BOUNDS, "Ball out of bounds"))
+            fault_player = last_hitter or server
+            winner = opponent(fault_player)
+            winner_reason = "Ball left the bounds of the table"
             final_event = EventType.OUT_OF_BOUNDS
             ball = new_ball
             break
@@ -263,6 +453,8 @@ def simulate(
 
     # Final record
     record_state()
+    if final_event != EventType.NONE and len(ball_history["event"]) > 0:
+        ball_history["event"][-1] = final_event.value
 
     # Convert to numpy arrays
     ball_history_np = {k: np.asarray(v) for k, v in ball_history.items()}
@@ -278,4 +470,6 @@ def simulate(
         table_bounces=table_bounces,
         rally_count=rally_count,
         final_event=final_event,
+        winner=winner,
+        winner_reason=winner_reason,
     )

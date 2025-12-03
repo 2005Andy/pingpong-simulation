@@ -1097,20 +1097,20 @@ def simulate(
 
         # Check for collisions (rackets can be moving)
         if stroke_idx_a < len(strokes_a):
-            if handle_circular_racket_collision(new_ball, racket_a):
-                rally_count += 1
-                stroke_idx_a += 1
-                last_hitter = Player.A
+                if handle_circular_racket_collision(new_ball, racket_a):
+                    rally_count += 1
+                    stroke_idx_a += 1
+                    last_hitter = Player.A
                 # Stop racket movement after collision
                 racket_a.movement.is_moving = False
                 events.append((t, EventType.RACKET_A_HIT, f"Player A hit (rally #{rally_count})"))
                 current_event = EventType.RACKET_A_HIT
 
         if stroke_idx_b < len(strokes_b):
-            if handle_circular_racket_collision(new_ball, racket_b):
-                rally_count += 1
-                stroke_idx_b += 1
-                last_hitter = Player.B
+                if handle_circular_racket_collision(new_ball, racket_b):
+                    rally_count += 1
+                    stroke_idx_b += 1
+                    last_hitter = Player.B
                 # Stop racket movement after collision
                 racket_b.movement.is_moving = False
                 events.append((t, EventType.RACKET_B_HIT, f"Player B hit (rally #{rally_count})"))

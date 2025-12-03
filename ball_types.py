@@ -36,6 +36,7 @@ class EventType(Enum):
     NET_CROSS_SUCCESS = 5
     NET_CROSS_FAIL = 6  # ball went under net or hit net
     OUT_OF_BOUNDS = 7
+    DOUBLE_BOUNCE = 8
 
 
 class Player(Enum):
@@ -92,9 +93,11 @@ class RacketMovement:
     target_velocity: Optional[np.ndarray] = None
     start_position: Optional[np.ndarray] = None
     start_normal: Optional[np.ndarray] = None
+    start_velocity: Optional[np.ndarray] = None
     movement_time: float = 0.0  # total time for movement
     elapsed_time: float = 0.0   # time elapsed in movement
     racket_speed: float = 3.0   # m/s, speed at which racket moves to position
+    min_duration: float = 0.02  # s, minimum duration for easing profile
 
 
 @dataclass
@@ -127,9 +130,11 @@ class RacketState:
                 target_velocity=self.movement.target_velocity.copy() if self.movement.target_velocity is not None else None,
                 start_position=self.movement.start_position.copy() if self.movement.start_position is not None else None,
                 start_normal=self.movement.start_normal.copy() if self.movement.start_normal is not None else None,
+                start_velocity=self.movement.start_velocity.copy() if self.movement.start_velocity is not None else None,
                 movement_time=self.movement.movement_time,
                 elapsed_time=self.movement.elapsed_time,
                 racket_speed=self.movement.racket_speed,
+                min_duration=self.movement.min_duration,
             ),
         )
 
@@ -144,6 +149,8 @@ class StrokeParams:
     swing_direction: np.ndarray  # unit vector of swing direction
     rubber_type: RubberType   # rubber surface type for this stroke
     spin_intent: str          # "topspin", "backspin", "sidespin", "flat"
+    mode: str = "custom"      # descriptive stroke mode (drop_short, flick, counter_loop, custom)
+    contact_offset: np.ndarray = field(default_factory=lambda: np.zeros(3))  # preferred hit point on ball (local coords)
 
 
 @dataclass
@@ -165,3 +172,5 @@ class SimulationResult:
     table_bounces: int
     rally_count: int
     final_event: EventType
+    winner: Optional[Player] = None
+    winner_reason: str = ""

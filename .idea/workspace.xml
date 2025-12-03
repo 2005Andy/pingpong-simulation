@@ -4,8 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5a2e6456-7a6c-4d1e-9a5d-569fce962331" name="更改" comment="feat: add function of creating output folder">
+    <list default="true" id="5a2e6456-7a6c-4d1e-9a5d-569fce962331" name="更改" comment="feat: split program into separate parts">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/流体大作业.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/流体大作业.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ball_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/ball_types.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/physics.py" beforeDir="false" afterPath="$PROJECT_DIR$/physics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pingpong_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/pingpong_main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pingpong_sim.py" beforeDir="false" afterPath="$PROJECT_DIR$/pingpong_sim.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/racket_control.py" beforeDir="false" afterPath="$PROJECT_DIR$/racket_control.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scenarios.py" beforeDir="false" afterPath="$PROJECT_DIR$/scenarios.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/simulation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_modular.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/types.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/visualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/visualization.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,6 +38,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Python.pingpong_main.executor&quot;: &quot;Run&quot;,
     &quot;Python.pingpong_sim.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
@@ -55,7 +68,9 @@
       <workItem from="1764334235381" duration="60000" />
       <workItem from="1764334297588" duration="70000" />
       <workItem from="1764334381392" duration="641000" />
-      <workItem from="1764335058077" duration="2137000" />
+      <workItem from="1764335058077" duration="3017000" />
+      <workItem from="1764399627078" duration="2013000" />
+      <workItem from="1764402728227" duration="4491000" />
     </task>
     <task id="LOCAL-00001" summary="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball">
       <option name="closed" value="true" />
@@ -73,7 +88,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764337274246</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="feat: split program into separate parts">
+      <option name="closed" value="true" />
+      <created>1764338733800</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1764338733800</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -82,9 +105,11 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball" />
     <MESSAGE value="feat: add function of creating output folder" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: add function of creating output folder" />
+    <MESSAGE value="feat: split program into separate parts" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: split program into separate parts" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/$pingpong_sim.coverage" NAME="pingpong_sim 覆盖结果" MODIFIED="1764336974999" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/$pingpong_main.coverage" NAME="pingpong_main 覆盖结果" MODIFIED="1764400277207" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

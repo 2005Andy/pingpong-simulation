@@ -9,7 +9,7 @@ References:
 - Aerodynamic coefficients based on published research on ball dynamics
 """
 
-from typing import Final, List, Tuple
+from typing import Final, List, Tuple, Dict, Any
 import numpy as np
 
 # =============================================================================
@@ -38,6 +38,15 @@ TABLE_WIDTH: Final[float] = 1.525  # m (y direction)
 TABLE_HEIGHT: Final[float] = 0.76  # m (table surface height from ground)
 TABLE_RESTITUTION: Final[float] = 0.90  # normal restitution coefficient e
 TABLE_FRICTION: Final[float] = 0.25  # tangential friction coefficient mu
+TABLE_SURFACE_COLOR: Final[str] = "#003366"  # Standard ping-pong table dark blue
+TABLE_STRIPE_COLOR: Final[str] = "#003366"  # White stripes on table
+TABLE_EDGE_COLOR: Final[str] = "#ffffff"    # White edges
+TABLE_LEG_COLOR: Final[str] = "#1d1e24"
+TABLE_LEG_WIDTH: Final[float] = 0.04  # m
+TABLE_LEG_HEIGHT: Final[float] = TABLE_HEIGHT  # m, leg height from ground to tabletop underside
+
+# Center line rendering width (physical width in meters on table surface)
+TABLE_CENTER_LINE_WIDTH: Final[float] = 0.015  # 15 mm wide white center line
 
 # Net properties (ITTF standard: 15.25 cm high)
 NET_HEIGHT: Final[float] = 0.1525  # m (15.25 cm above table surface)
@@ -47,6 +56,9 @@ NET_THICKNESS: Final[float] = 0.002  # m (2 mm, for collision detection)
 # Racket properties (standard paddle: ~17 cm diameter blade)
 RACKET_RADIUS: Final[float] = 0.085  # m (8.5 cm radius = 17 cm diameter)
 RACKET_THICKNESS: Final[float] = 0.006  # m (~6 mm total thickness with rubber)
+RACKET_MAX_SPEED: Final[float] = 1.0  # m/s, maximum allowed racket center speed
+RACKET_BASE_SPEED: Final[float] = 0.6  # m/s, nominal center speed for planning
+RACKET_MIN_MOVEMENT_DURATION: Final[float] = 0.08  # s, lower bound for easing duration
 
 # Rubber surface properties (different for inverted/pimpled rubber)
 # Inverted (smooth) rubber - most common
@@ -64,9 +76,9 @@ RUBBER_ANTISPIN_FRICTION: Final[float] = 0.15
 # Default racket surface type
 DEFAULT_RUBBER_TYPE: Final[str] = "inverted"
 
-# Player positions (typical standing positions relative to table center)
-PLAYER_A_X: Final[float] = -1.8  # m (behind table on negative x side)
-PLAYER_B_X: Final[float] = 1.8   # m (behind table on positive x side)
+# Player positions (typical striking positions relative to table center)
+PLAYER_A_X: Final[float] = -TABLE_LENGTH / 2  # m (near center on negative x side)
+PLAYER_B_X: Final[float] = TABLE_LENGTH / 2   # m (near center on positive x side)
 PLAYER_STRIKE_HEIGHT: Final[float] = 1.0  # m (typical striking height above ground)
 
 # Numerical integration parameters
@@ -79,38 +91,50 @@ DEFAULT_BALL_CSV: Final[str] = "ball_trajectory.csv"
 DEFAULT_RACKET_CSV: Final[str] = "racket_trajectory.csv"
 DEFAULT_ANIM_FILE: Final[str] = "trajectory.mp4"
 ANIM_FPS: Final[int] = 60
-ANIM_SKIP: Final[int] = 100  # use every Nth frame for animation
+ANIM_SKIP: Final[int] = 10  # use every Nth frame for animation
+DEFAULT_BALL_COLOR: Final[str] = "#f97306"
+DEFAULT_BALL_SIZE: Final[float] = 18.0  # matplotlib marker size
+DEFAULT_SCENE_MARGIN: Final[float] = 0.15  # meters of padding for visualization axes (tight view)
+
+# Racket interception / planning parameters
+RACKET_PREDICTION_DT_MULTIPLIER: Final[float] = 8.0
+RACKET_PREDICTION_MIN_DT: Final[float] = 8.0e-4
+RACKET_PREDICTION_MAX_TIME: Final[float] = 0.6  # s, prediction horizon after bounce
+RACKET_STRIKE_HEIGHT_WINDOW: Final[float] = 0.22  # m, tolerance around desired strike height
+RACKET_STRIKE_X_WINDOW: Final[float] = 0.30  # m, tolerance around target_x strike plane
 
 # Default scenario name
-DEFAULT_SCENARIO: Final[str] = "serve"
+DEFAULT_SCENARIO: Final[str] = "custom"
+DEFAULT_SERVE_MODE: Final[str] = "fh_under"
+DEFAULT_SERVER: Final[str] = "A"
 
 # Default output directory
 DEFAULT_OUTPUT_DIR: Final[str] = "./output"
 
 # Default custom initial conditions (typical serve position with topspin)
 CUSTOM_INITIAL_POSITION: Final[List[float]] = [
-    -TABLE_LENGTH / 2 - 0.2,  # x: behind table
-    0.0,                       # y: centered
-    TABLE_HEIGHT + 0.25,       # z: above table
+    -TABLE_LENGTH / 2 - 0.15,  # x: behind table
+    0.4,                       # y: centered
+    TABLE_HEIGHT + 0.20,       # z: above table
 ]
-CUSTOM_INITIAL_VELOCITY: Final[List[float]] = [5.0, 0.0, 2.0]  # forward and upward
+CUSTOM_INITIAL_VELOCITY: Final[List[float]] = [5.5, -0.5, -2.0]  # forward and upward
 CUSTOM_INITIAL_OMEGA: Final[List[float]] = [0.0, 100.0, 0.0]   # topspin around y-axis
 
 # Custom stroke sequence for Player A (each rally)
-# Format: [(stroke_type, rubber_type), ...]
-CUSTOM_STROKES_A: Final[List[Tuple[str, str]]] = [
-    ("topspin", "inverted"),
-    ("topspin", "inverted"),
-    ("backspin", "inverted"),
-    ("topspin", "inverted"),
-    ("flat", "inverted"),
+# Format: List[Dict[str, Any]] with keys: mode, rubber, overrides(optional)
+CUSTOM_STROKES_A: Final[List[Dict[str, Any]]] = [
+    {"mode": "flick", "rubber": "inverted"},
+    {"mode": "flick", "rubber": "inverted"},
+    {"mode": "drop_short", "rubber": "inverted"},
+    {"mode": "counter_loop", "rubber": "inverted"},
+    {"mode": "counter_loop", "rubber": "inverted"},
 ]
 
 # Custom stroke sequence for Player B
-CUSTOM_STROKES_B: Final[List[Tuple[str, str]]] = [
-    ("topspin", "inverted"),
-    ("backspin", "pimpled"),
-    ("topspin", "inverted"),
-    ("sidespin", "inverted"),
-    ("topspin", "inverted"),
+CUSTOM_STROKES_B: Final[List[Dict[str, Any]]] = [
+    {"mode": "flick", "rubber": "inverted"},
+    {"mode": "flick", "rubber": "inverted"},
+    {"mode": "counter_loop", "rubber": "inverted"},
+    {"mode": "flick", "rubber": "inverted"},
+    {"mode": "counter_loop", "rubber": "inverted"},
 ]
