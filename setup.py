@@ -1,12 +1,20 @@
 """Setup script for PingPong Simulation package."""
 
 from setuptools import setup, find_packages
+import os
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-with open("requirements.txt", "r", encoding="utf-8") as fh:
-    requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+# Read requirements safely
+def read_requirements():
+    requirements_path = os.path.join(os.path.dirname(__file__), "requirements.txt")
+    if os.path.exists(requirements_path):
+        with open(requirements_path, "r", encoding="utf-8") as fh:
+            return [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+    return []
+
+requirements = read_requirements()
 
 setup(
     name="pingpong-simulation",
@@ -16,13 +24,13 @@ setup(
     description="3D ping-pong ball flight simulation with realistic physics",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    license="MIT",
     url="https://github.com/2005Andy/pingpong-simulation",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Physics",
-        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
