@@ -184,7 +184,9 @@ class RacketMovement:
     start_normal: Optional[np.ndarray] = None
     movement_time: float = 0.0  # total time for movement
     elapsed_time: float = 0.0   # time elapsed in movement
-    racket_speed: float = 3.0   # m/s, speed at which racket moves to position
+    racket_speed: float = 1.0   # m/s, speed at which racket moves to position (further reduced for smooth movement)
+    reaction_delay: float = 0.08  # s, shorter delay for faster reaction
+    delay_elapsed: float = 0.0   # time elapsed in delay phase
 
 
 @dataclass
@@ -220,6 +222,8 @@ class RacketState:
                 movement_time=self.movement.movement_time,
                 elapsed_time=self.movement.elapsed_time,
                 racket_speed=self.movement.racket_speed,
+                reaction_delay=self.movement.reaction_delay,
+                delay_elapsed=self.movement.delay_elapsed,
             ),
         )
 
@@ -579,6 +583,7 @@ def start_racket_movement(racket: RacketState, target_state: RacketState) -> Non
     racket.movement.start_normal = racket.normal.copy()
     racket.movement.movement_time = distance / racket.movement.racket_speed
     racket.movement.elapsed_time = 0.0
+    racket.movement.delay_elapsed = 0.0  # Reset delay timer
 
 
 def update_racket_movement(racket: RacketState, dt: float) -> None:
@@ -586,6 +591,13 @@ def update_racket_movement(racket: RacketState, dt: float) -> None:
     if not racket.movement.is_moving:
         return
 
+    # First, handle reaction delay
+    racket.movement.delay_elapsed += dt
+    if racket.movement.delay_elapsed < racket.movement.reaction_delay:
+        # Still in delay phase, don't move yet
+        return
+
+    # Delay is over, now handle actual movement
     racket.movement.elapsed_time += dt
 
     if racket.movement.elapsed_time >= racket.movement.movement_time:

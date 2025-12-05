@@ -38,31 +38,31 @@ STROKE_MODALITIES: Dict[str, Dict[str, Any]] = {
         "target_x_offset": 0.12,
     },
     "flick": {
-        "angle_deg_range": (80.0, 95.0),
-        "strike_height": 0.10,
-        "swing_speed_range": (0.1, 0.5),
-        "direction": (0.1, 0.05, 0.1),
+        "angle_deg_range": (88.0, 94.0),  # Even more conservative angle range
+        "strike_height": 0.15,  # Lower strike height
+        "swing_speed_range": (0.04, 0.12),  # Even slower speed range
+        "direction": (0.06, 0.0, 0.03),  # Very conservative direction
         "spin": "topspin",
         "contact_offset": (0.0, 0.0, -0.005),
-        "target_x_offset": 0.18,
+        "target_x_offset": 0.16,  # Closer target for maximum safety
     },
     "counter_loop": {
-        "angle_deg_range": (30.0, 50.0),
-        "strike_height": 0.22,
-        "swing_speed_range": (9.0, 12.0),
-        "direction": (1.0, 0.0, -0.15),
+        "angle_deg_range": (35.0, 55.0),  # Slightly higher angle for better control
+        "strike_height": 0.25,  # Higher strike height
+        "swing_speed_range": (7.0, 9.0),  # Reduced speed for better control
+        "direction": (1.0, 0.0, -0.10),  # Less downward angle
         "spin": "topspin",
         "contact_offset": (0.0, 0.0, 0.015),
-        "target_x_offset": 0.32,
+        "target_x_offset": 0.35,  # Further target position
     },
     # Legacy stroke names preserved for compatibility
     "topspin": {
-        "angle_deg": 105.0,
-        "strike_height": 0.25,
-        "swing_speed": 8.0,
-        "direction": (1.0, 0.0, 0.3),
+        "angle_deg": 96.0,  # Slightly lower angle for good control
+        "strike_height": 0.12,  # Lower strike height
+        "swing_speed": 1.6,  # Moderate speed for better momentum without losing control
+        "direction": (0.20, 0.0, 0.035),  # Slightly more momentum
         "spin": "topspin",
-        "target_x_offset": 0.30,
+        "target_x_offset": 0.18,  # Balanced target distance
     },
     "backspin": {
         "angle_deg": 70.0,

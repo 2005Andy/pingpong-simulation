@@ -83,7 +83,7 @@ PLAYER_STRIKE_HEIGHT: Final[float] = 1.0  # m (typical striking height above gro
 
 # Numerical integration parameters
 TIME_STEP: Final[float] = 5.0e-5  # s (50 microseconds for accuracy)
-MAX_TIME: Final[float] = 5.0  # s
+MAX_TIME: Final[float] = 10.0  # s (increased to allow longer rallies)
 RECORD_INTERVAL: Final[int] = 20  # record every N steps to reduce data size
 
 # Output / visualization parameters
@@ -97,15 +97,15 @@ DEFAULT_BALL_SIZE: Final[float] = 18.0  # matplotlib marker size
 DEFAULT_SCENE_MARGIN: Final[float] = 0.15  # meters of padding for visualization axes (tight view)
 
 # Racket interception / planning parameters
-RACKET_PREDICTION_DT_MULTIPLIER: Final[float] = 8.0
-RACKET_PREDICTION_MIN_DT: Final[float] = 8.0e-4
-RACKET_PREDICTION_MAX_TIME: Final[float] = 0.6  # s, prediction horizon after bounce
-RACKET_STRIKE_HEIGHT_WINDOW: Final[float] = 0.22  # m, tolerance around desired strike height
-RACKET_STRIKE_X_WINDOW: Final[float] = 0.30  # m, tolerance around target_x strike plane
+RACKET_PREDICTION_DT_MULTIPLIER: Final[float] = 30.0  # Maximum prediction accuracy
+RACKET_PREDICTION_MIN_DT: Final[float] = 1.0e-4  # Finest time steps
+RACKET_PREDICTION_MAX_TIME: Final[float] = 2.0  # s, maximum prediction horizon
+RACKET_STRIKE_HEIGHT_WINDOW: Final[float] = 0.7  # m, maximum tolerance for height
+RACKET_STRIKE_X_WINDOW: Final[float] = 0.8  # m, maximum tolerance for position
 
 # Default scenario name
 DEFAULT_SCENARIO: Final[str] = "custom"
-DEFAULT_SERVE_MODE: Final[str] = "fh_under"
+DEFAULT_SERVE_MODE: Final[str] = "fh_under"  # Back to fh_under, will adjust parameters instead
 DEFAULT_SERVER: Final[str] = "A"
 
 # Default output directory
@@ -123,18 +123,18 @@ CUSTOM_INITIAL_OMEGA: Final[List[float]] = [0.0, 100.0, 0.0]   # topspin around 
 # Custom stroke sequence for Player A (each rally)
 # Format: List[Dict[str, Any]] with keys: mode, rubber, overrides(optional)
 CUSTOM_STROKES_A: Final[List[Dict[str, Any]]] = [
-    {"mode": "flick", "rubber": "inverted"},
-    {"mode": "flick", "rubber": "inverted"},
-    {"mode": "drop_short", "rubber": "inverted"},
-    {"mode": "counter_loop", "rubber": "inverted"},
-    {"mode": "counter_loop", "rubber": "inverted"},
+    {"mode": "flick", "rubber": "inverted"},  # Start with controlled shot
+    {"mode": "flick", "rubber": "inverted"},  # Consistent control
+    {"mode": "topspin", "rubber": "inverted"},  # One power shot
+    {"mode": "flick", "rubber": "inverted"},  # Back to control
+    {"mode": "flick", "rubber": "inverted"},  # End with control
 ]
 
 # Custom stroke sequence for Player B
 CUSTOM_STROKES_B: Final[List[Dict[str, Any]]] = [
-    {"mode": "flick", "rubber": "inverted"},
-    {"mode": "flick", "rubber": "inverted"},
-    {"mode": "counter_loop", "rubber": "inverted"},
-    {"mode": "flick", "rubber": "inverted"},
-    {"mode": "counter_loop", "rubber": "inverted"},
+    {"mode": "flick", "rubber": "inverted"},  # Start with control shot
+    {"mode": "flick", "rubber": "inverted"},  # Consistent control
+    {"mode": "topspin", "rubber": "inverted"},  # One power shot
+    {"mode": "flick", "rubber": "inverted"},  # Back to control
+    {"mode": "flick", "rubber": "inverted"},  # End with control
 ]

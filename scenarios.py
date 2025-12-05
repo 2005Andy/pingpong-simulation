@@ -42,11 +42,11 @@ SERVE_MODE_PRESETS = {
         "description": "Forehand underspin short serve",
         "position": np.array([
             -TABLE_LENGTH / 2 - 0.15,
-            0.45,
-            TABLE_HEIGHT + 0.2,
+            0.3,  # Adjusted Y position for better control
+            TABLE_HEIGHT + 0.18,  # Slightly lower height
         ]),
-        "velocity": np.array([4.5, -0.2, -2.0]),
-        "omega": np.array([0.0, 220.0, 0.0]),
+        "velocity": np.array([5.2, -0.15, -1.8]),  # Increased speed, reduced downward component
+        "omega": np.array([0.0, 180.0, 15.0]),  # Reduced backspin, added slight sidespin
     },
     "fast_long": {
         "description": "Fast long drive serve",

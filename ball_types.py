@@ -96,8 +96,10 @@ class RacketMovement:
     start_velocity: Optional[np.ndarray] = None
     movement_time: float = 0.0  # total time for movement
     elapsed_time: float = 0.0   # time elapsed in movement
-    racket_speed: float = 3.0   # m/s, speed at which racket moves to position
+    racket_speed: float = 1.0   # m/s, speed at which racket moves to position (further reduced for smooth movement)
     min_duration: float = 0.02  # s, minimum duration for easing profile
+    reaction_delay: float = 0.08  # s, shorter delay for faster reaction
+    delay_elapsed: float = 0.0   # time elapsed in delay phase
 
 
 @dataclass
@@ -135,6 +137,8 @@ class RacketState:
                 elapsed_time=self.movement.elapsed_time,
                 racket_speed=self.movement.racket_speed,
                 min_duration=self.movement.min_duration,
+                reaction_delay=self.movement.reaction_delay,
+                delay_elapsed=self.movement.delay_elapsed,
             ),
         )
 
