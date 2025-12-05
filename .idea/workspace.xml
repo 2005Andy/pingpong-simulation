@@ -4,14 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5a2e6456-7a6c-4d1e-9a5d-569fce962331" name="更改" comment="test: stage (a version that can run a round)">
+    <list default="true" id="5a2e6456-7a6c-4d1e-9a5d-569fce962331" name="更改" comment="perf: update the parameters so that the number of rounds have surged to 2">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MODULAR_README.md" beforeDir="false" afterPath="$PROJECT_DIR$/MODULAR_README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ball_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/ball_types.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pingpong_sim.py" beforeDir="false" afterPath="$PROJECT_DIR$/pingpong_sim.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/racket_control.py" beforeDir="false" afterPath="$PROJECT_DIR$/racket_control.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scenarios.py" beforeDir="false" afterPath="$PROJECT_DIR$/scenarios.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analyze_impact.py" beforeDir="false" afterPath="$PROJECT_DIR$/analyze_impact.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,6 +62,7 @@
       <workItem from="1764399627078" duration="2013000" />
       <workItem from="1764402728227" duration="4491000" />
       <workItem from="1764768871842" duration="4930000" />
+      <workItem from="1764920029461" duration="2451000" />
     </task>
     <task id="LOCAL-00001" summary="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball">
       <option name="closed" value="true" />
@@ -99,18 +96,59 @@
       <option name="project" value="LOCAL" />
       <updated>1764768930372</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="feat: add the feature of analyzing trajectory">
+      <option name="closed" value="true" />
+      <created>1764920150618</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1764920150618</updated>
+    </task>
+    <task id="LOCAL-00006" summary="perf: update the parameters so that the number of rounds have surged to 2">
+      <option name="closed" value="true" />
+      <created>1764920289294</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1764920289294</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball" />
     <MESSAGE value="feat: add function of creating output folder" />
     <MESSAGE value="feat: split program into separate parts" />
     <MESSAGE value="test: stage (a version that can run a round)" />
-    <option name="LAST_COMMIT_MESSAGE" value="test: stage (a version that can run a round)" />
+    <MESSAGE value="feat: add the feature of analyzing trajectory" />
+    <MESSAGE value="perf: update the parameters so that the number of rounds have surged to 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="perf: update the parameters so that the number of rounds have surged to 2" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/$pingpong_sim.coverage" NAME="pingpong_sim 覆盖结果" MODIFIED="1764336974999" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

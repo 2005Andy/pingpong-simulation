@@ -6,20 +6,13 @@ import os
 
 # Import from project framework
 from constants import (
-    TABLE_LENGTH, TABLE_HEIGHT, BALL_RADIUS, TABLE_WIDTH,
+    TABLE_LENGTH, TABLE_HEIGHT, BALL_RADIUS, 
     DEFAULT_OUTPUT_DIR
 )
-from ball_types import BallState, SimulationResult
+from ball_types import BallState
 from scenarios import create_table, create_net
-from simulation import simulate
+from pingpong_sim import simulate, SimulationResult
 from visualization import animate_trajectory_3d
-
-# Analysis-specific constants
-DEFAULT_ANALYSIS_TIME = 3.0  # seconds
-BALL_EPSILON_HEIGHT = 0.3    # meters above table to avoid interpenetration
-DEFAULT_LAUNCH_SPEED = 5.0   # m/s
-DEFAULT_LAUNCH_ANGLE = 45.0  # degrees
-DEFAULT_TOPSPIN = [0.0, 50.0, 0.0]  # rad/s
 
 def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
     """
@@ -49,7 +42,7 @@ def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
     # We add BALL_RADIUS to z to place the ball *on* the surface, not inside it.
     start_x = -TABLE_LENGTH / 2
     start_y = 0.0
-    start_z = TABLE_HEIGHT + BALL_EPSILON_HEIGHT  # Small epsilon to avoid interpenetration
+    start_z = TABLE_HEIGHT + 0.3 # Small epsilon to avoid interpenetration
     
     pos = np.array([start_x, start_y, start_z])
     vel = np.array([vx, vy, vz])
@@ -66,7 +59,7 @@ def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
     strokes_b = []
     
     # 3. Run Simulation
-    # We'll run for enough time to see the full trajectory
+    # We'll run for enough time to see the full trajectory (e.g. 3 seconds)
     print("Running simulation...")
     result = simulate(
         initial_ball=initial_ball,
@@ -74,7 +67,7 @@ def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
         strokes_b=strokes_b,
         table=table,
         net=net,
-        max_time=DEFAULT_ANALYSIS_TIME
+        max_time=3.0
     )
     
     # 4. Process Outputs
@@ -87,16 +80,11 @@ def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
     base_name = f"traj_v{speed:.1f}_ang{angle:.1f}_spin{spin_str}"
     
     # (1) X-Z Trajectory Curve
-    png_path_xz = out_path / f"{base_name}_xz.png"
-    plot_xz_curve(result, table, net, png_path_xz, angle)
-    print(f"Saved trajectory plot to {png_path_xz}")
-
-    # (2) X-Y Trajectory Curve (Top View)
-    png_path_xy = out_path / f"{base_name}_xy.png"
-    plot_xy_curve(result, table, net, png_path_xy, angle)
-    print(f"Saved trajectory plot to {png_path_xy}")
+    png_path = out_path / f"{base_name}_xz.png"
+    plot_xz_curve(result, table, net, png_path, angle)
+    print(f"Saved trajectory plot to {png_path}")
     
-    # (3) Video Generation
+    # (2) Video Generation
     video_file = out_path / f"{base_name}.gif"
     # Note: If .gif fails (no ImageMagick), fallback to .mp4
     try:
@@ -152,64 +140,14 @@ def plot_xz_curve(result: SimulationResult, table, net, filename, angle):
     plt.savefig(filename)
     plt.close()
 
-def plot_xy_curve(result: SimulationResult, table, net, filename, angle):
-    """Plot the trajectory in the X-Y plane (Top View)."""
-    x = result.ball_history["x"]
-    y = result.ball_history["y"]
-    
-    plt.figure(figsize=(8, 12))
-    
-    # Plot Trajectory
-    plt.plot(x, y, label=f"Ball Trajectory", linewidth=2, color='blue')
-    
-    # Start/End points
-    plt.scatter([x[0]], [y[0]], color='green', label='Start')
-    plt.scatter([x[-1]], [y[-1]], color='red', label='End')
-    
-    # Draw Table Boundary
-    half_len = table.length / 2
-    half_wid = table.width / 2
-    
-    # Table outline rectangle
-    table_x = [-half_len, half_len, half_len, -half_len, -half_len]
-    table_y = [-half_wid, -half_wid, half_wid, half_wid, -half_wid]
-    plt.plot(table_x, table_y, color='black', linewidth=2, label='Table Edge')
-    
-    # Draw Center Line (y=0)
-    plt.plot([-half_len, half_len], [0, 0], color='lightgray', linestyle='--', linewidth=1)
-    
-    # Draw Net
-    net_half_len = net.length / 2
-    plt.plot([0, 0], [-net_half_len, net_half_len], 
-             color='gray', linewidth=3, label='Net')
-    
-    # Formatting
-    plt.title(f"Ball Trajectory (Top View, Angle={angle}°)")
-    plt.xlabel("Length (X) [m]")
-    plt.ylabel("Width (Y) [m]")
-    plt.legend(loc='upper right')
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.axis('equal')
-    
-    # Set limits to include table and some margin
-    margin = 0.5
-    plt.xlim(-half_len - margin, half_len + margin)
-    plt.ylim(-half_wid - margin, half_wid + margin)
-    
-    plt.tight_layout()
-    plt.savefig(filename)
-    plt.close()
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze ping-pong ball trajectory with configurable launch.")
-    parser.add_argument("--speed", type=float, default=DEFAULT_LAUNCH_SPEED,
-                        help=f"Initial speed (magnitude) in m/s (default: {DEFAULT_LAUNCH_SPEED})")
-    parser.add_argument("--angle", type=float, default=DEFAULT_LAUNCH_ANGLE,
-                        help=f"Launch angle in degrees (default: {DEFAULT_LAUNCH_ANGLE})")
-    parser.add_argument("--spin", type=float, nargs=3, default=DEFAULT_TOPSPIN,
-                        help=f"Initial spin [wx, wy, wz] in rad/s (default: {DEFAULT_TOPSPIN})")
+    parser.add_argument("--speed", type=float, default=5.0, help="Initial speed (magnitude) in m/s")
+    parser.add_argument("--angle", type=float, default=45.0, help="Launch angle in degrees (default: 45.0)")
+    parser.add_argument("--spin", type=float, nargs=3, default=[0.0, 50.0, 0.0], 
+                        help="Initial spin [wx, wy, wz] in rad/s (default: topspin)")
     parser.add_argument("--out", type=str, default="output/analysis", help="Output directory")
-
+    
     args = parser.parse_args()
-
+    
     run_analysis(args.speed, args.angle, args.spin, args.out)
