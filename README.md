@@ -65,13 +65,13 @@ pip install -r requirements.txt
 
 ```bash
 # 发球场景
-python pingpong_sim.py --scenario serve
-
-# 扣杀场景
-python pingpong_sim.py --scenario smash
+python pingpong_main.py --serve-mode fh_under
 
 # 自定义场景
-python pingpong_sim.py --scenario custom --pos -1.2 0 0.9 --vel 8 0 3 --omega 0 150 0
+python pingpong_main.py --serve-mode custom --pos -1.2 0 0.9 --vel 8 0 3 --omega 0 150 0
+
+# 轨迹分析工具
+python analyze_impact.py --speed 5.0 --angle 30.0 --spin 0 150 0
 ```
 
 ### 命令行参数

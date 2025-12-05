@@ -9,10 +9,17 @@ from constants import (
     TABLE_LENGTH, TABLE_HEIGHT, BALL_RADIUS, TABLE_WIDTH,
     DEFAULT_OUTPUT_DIR
 )
-from ball_types import BallState
+from ball_types import BallState, SimulationResult
 from scenarios import create_table, create_net
-from pingpong_sim import simulate, SimulationResult
+from simulation import simulate
 from visualization import animate_trajectory_3d
+
+# Analysis-specific constants
+DEFAULT_ANALYSIS_TIME = 3.0  # seconds
+BALL_EPSILON_HEIGHT = 0.3    # meters above table to avoid interpenetration
+DEFAULT_LAUNCH_SPEED = 5.0   # m/s
+DEFAULT_LAUNCH_ANGLE = 45.0  # degrees
+DEFAULT_TOPSPIN = [0.0, 50.0, 0.0]  # rad/s
 
 def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
     """
@@ -42,7 +49,7 @@ def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
     # We add BALL_RADIUS to z to place the ball *on* the surface, not inside it.
     start_x = -TABLE_LENGTH / 2
     start_y = 0.0
-    start_z = TABLE_HEIGHT + 0.3 # Small epsilon to avoid interpenetration
+    start_z = TABLE_HEIGHT + BALL_EPSILON_HEIGHT  # Small epsilon to avoid interpenetration
     
     pos = np.array([start_x, start_y, start_z])
     vel = np.array([vx, vy, vz])
@@ -59,7 +66,7 @@ def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
     strokes_b = []
     
     # 3. Run Simulation
-    # We'll run for enough time to see the full trajectory (e.g. 3 seconds)
+    # We'll run for enough time to see the full trajectory
     print("Running simulation...")
     result = simulate(
         initial_ball=initial_ball,
@@ -67,7 +74,7 @@ def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
         strokes_b=strokes_b,
         table=table,
         net=net,
-        max_time=3.0
+        max_time=DEFAULT_ANALYSIS_TIME
     )
     
     # 4. Process Outputs
@@ -195,12 +202,14 @@ def plot_xy_curve(result: SimulationResult, table, net, filename, angle):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze ping-pong ball trajectory with configurable launch.")
-    parser.add_argument("--speed", type=float, default=5.0, help="Initial speed (magnitude) in m/s")
-    parser.add_argument("--angle", type=float, default=45.0, help="Launch angle in degrees (default: 45.0)")
-    parser.add_argument("--spin", type=float, nargs=3, default=[0.0, 50.0, 0.0], 
-                        help="Initial spin [wx, wy, wz] in rad/s (default: topspin)")
+    parser.add_argument("--speed", type=float, default=DEFAULT_LAUNCH_SPEED,
+                        help=f"Initial speed (magnitude) in m/s (default: {DEFAULT_LAUNCH_SPEED})")
+    parser.add_argument("--angle", type=float, default=DEFAULT_LAUNCH_ANGLE,
+                        help=f"Launch angle in degrees (default: {DEFAULT_LAUNCH_ANGLE})")
+    parser.add_argument("--spin", type=float, nargs=3, default=DEFAULT_TOPSPIN,
+                        help=f"Initial spin [wx, wy, wz] in rad/s (default: {DEFAULT_TOPSPIN})")
     parser.add_argument("--out", type=str, default="output/analysis", help="Output directory")
-    
+
     args = parser.parse_args()
-    
+
     run_analysis(args.speed, args.angle, args.spin, args.out)
