@@ -1,0 +1,22 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 80%  # 项目整体覆盖率目标
+        threshold: 1%  # 覆盖率变化阈值
+    patch:
+      default:
+        target: 80%  # patch覆盖率目标
+        threshold: 1%  # patch变化阈值
+
+  ignore:
+    - "setup.py"  # 忽略setup.py的覆盖率要求
+    - "tests/"  # 忽略测试目录本身
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false  # 即使没有变化也发表评论
+
+github_checks:
+  annotations: true

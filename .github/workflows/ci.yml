@@ -42,8 +42,22 @@ jobs:
       run: |
         pytest --cov=./ --cov-report=xml
 
+    - name: Check if source code changed
+      id: source-changed
+      run: |
+        # 检查是否有源代码文件被修改（排除测试文件和配置文件）
+        CHANGED_FILES=$(git diff --name-only HEAD~1 | grep -E '\.(py)$' | grep -v 'test_' | grep -v 'conftest.py' | grep -v 'setup.py' || true)
+        if [ -n "$CHANGED_FILES" ]; then
+          echo "source_changed=true" >> $GITHUB_OUTPUT
+          echo "Source files changed: $CHANGED_FILES"
+        else
+          echo "source_changed=false" >> $GITHUB_OUTPUT
+          echo "Only config/docs files changed, skipping patch coverage check"
+        fi
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
+      if: steps.source-changed.outputs.source_changed == 'true'
       with:
         file: ./coverage.xml
         flags: unittests
