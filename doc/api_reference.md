@@ -1,10 +1,10 @@
-# API 参考文档
+# API Reference Documentation
 
-## 核心模块
+## Core Modules
 
-### simulation 模块
+### simulation Module
 
-#### simulate() 函数
+#### simulate() Function
 
 ```python
 def simulate(
@@ -19,19 +19,19 @@ def simulate(
 ) -> SimulationResult
 ```
 
-**参数**:
-- `initial_ball`: 初始球体状态
-- `strokes_a`: A选手击球序列
-- `strokes_b`: B选手击球序列
-- `table`: 球桌配置
-- `net`: 球网配置
-- `dt`: 时间步长 (秒)
-- `max_time`: 最大仿真时间 (秒)
-- `record_interval`: 记录间隔 (步数)
+**Parameters**:
+- `initial_ball`: Initial ball state
+- `strokes_a`: Stroke sequence for Player A
+- `strokes_b`: Stroke sequence for Player B
+- `table`: Table configuration
+- `net`: Net configuration
+- `dt`: Time step (seconds)
+- `max_time`: Maximum simulation time (seconds)
+- `record_interval`: Record interval (steps)
 
-**返回值**: SimulationResult 对象，包含完整轨迹数据
+**Returns**: SimulationResult object containing complete trajectory data
 
-### physics 模块
+### physics Module
 
 #### aerodynamic_acceleration()
 
@@ -39,13 +39,13 @@ def simulate(
 def aerodynamic_acceleration(velocity: np.ndarray, omega: np.ndarray) -> np.ndarray
 ```
 
-计算空气动力学加速度，包括重力、阻力和马格努斯力。
+Calculates aerodynamic acceleration including gravity, drag, and Magnus force.
 
-**参数**:
-- `velocity`: 球体速度向量 (m/s)
-- `omega`: 球体角速度向量 (rad/s)
+**Parameters**:
+- `velocity`: Ball velocity vector (m/s)
+- `omega`: Ball angular velocity vector (rad/s)
 
-**返回值**: 加速度向量 (m/s²)
+**Returns**: Acceleration vector (m/s²)
 
 #### rk4_step()
 
@@ -53,13 +53,13 @@ def aerodynamic_acceleration(velocity: np.ndarray, omega: np.ndarray) -> np.ndar
 def rk4_step(state: BallState, dt: float) -> BallState
 ```
 
-使用四阶龙格-库塔方法积分一步。
+Advances state by one step using 4th-order Runge-Kutta method.
 
-**参数**:
-- `state`: 当前球体状态
-- `dt`: 时间步长
+**Parameters**:
+- `state`: Current ball state
+- `dt`: Time step
 
-**返回值**: 新的球体状态
+**Returns**: New ball state
 
 #### handle_plane_collision()
 
@@ -74,19 +74,19 @@ def handle_plane_collision(
 ) -> bool
 ```
 
-处理球体与平面的碰撞。
+Handles collision between ball and planar surface.
 
-**参数**:
-- `state`: 球体状态 (会被修改)
-- `plane_point`: 平面上一点
-- `normal`: 平面法向量
-- `restitution`: 法向恢复系数
-- `friction`: 切向摩擦系数
-- `surface_velocity`: 表面速度
+**Parameters**:
+- `state`: Ball state (will be modified)
+- `plane_point`: A point on the plane
+- `normal`: Plane normal vector
+- `restitution`: Normal restitution coefficient
+- `friction`: Tangential friction coefficient
+- `surface_velocity`: Surface velocity
 
-**返回值**: 是否发生碰撞
+**Returns**: Whether collision impulse was applied
 
-### racket_control 模块
+### racket_control Module
 
 #### create_stroke_from_mode()
 
@@ -99,15 +99,15 @@ def create_stroke_from_mode(
 ) -> StrokeParams
 ```
 
-从预定义模式创建击球参数。
+Creates stroke parameters from predefined modes.
 
-**参数**:
-- `player`: 选手 (A 或 B)
-- `mode`: 击球模式 ("flick", "topspin", "backspin"等)
-- `rubber_type`: 胶皮类型
-- `overrides`: 参数覆盖字典
+**Parameters**:
+- `player`: Player (A or B)
+- `mode`: Stroke mode ("flick", "topspin", "backspin", etc.)
+- `rubber_type`: Rubber type
+- `overrides`: Parameter override dictionary
 
-**返回值**: StrokeParams 对象
+**Returns**: StrokeParams object
 
 #### compute_racket_for_stroke()
 
@@ -121,18 +121,18 @@ def compute_racket_for_stroke(
 ) -> RacketState
 ```
 
-计算击球所需的球拍状态。
+Computes racket state required for executing a stroke.
 
-**参数**:
-- `ball_pos`: 球体位置
-- `ball_vel`: 球体速度
-- `stroke`: 击球参数
-- `player`: 击球选手
-- `table_height`: 球桌高度
+**Parameters**:
+- `ball_pos`: Ball position
+- `ball_vel`: Ball velocity
+- `stroke`: Stroke parameters
+- `player`: Hitting player
+- `table_height`: Table height
 
-**返回值**: 球拍状态配置
+**Returns**: Racket state configuration
 
-### scenarios 模块
+### scenarios Module
 
 #### create_table()
 
@@ -140,9 +140,9 @@ def compute_racket_for_stroke(
 def create_table() -> Table
 ```
 
-创建标准ITTF球桌配置。
+Creates standard ITTF table tennis table configuration.
 
-**返回值**: Table 对象
+**Returns**: Table object
 
 #### create_net()
 
@@ -150,9 +150,9 @@ def create_table() -> Table
 def create_net() -> Net
 ```
 
-创建标准ITTF球网配置。
+Creates standard ITTF table tennis net configuration.
 
-**返回值**: Net 对象
+**Returns**: Net object
 
 #### create_custom_scenario()
 
@@ -166,18 +166,18 @@ def create_custom_scenario(
 ) -> Tuple[BallState, List[StrokeParams], List[StrokeParams]]
 ```
 
-创建自定义仿真场景。
+Creates custom simulation scenario.
 
-**参数**:
-- `position`: 初始位置
-- `velocity`: 初始速度
-- `omega`: 初始角速度
-- `strokes_a`: A选手击球序列
-- `strokes_b`: B选手击球序列
+**Parameters**:
+- `position`: Initial position
+- `velocity`: Initial velocity
+- `omega`: Initial angular velocity
+- `strokes_a`: Stroke sequence for Player A
+- `strokes_b`: Stroke sequence for Player B
 
-**返回值**: (球体状态, A击球序列, B击球序列)
+**Returns**: (ball state, A stroke sequence, B stroke sequence)
 
-### visualization 模块
+### visualization Module
 
 #### plot_trajectory_3d()
 
@@ -192,17 +192,17 @@ def plot_trajectory_3d(
 ) -> plt.Figure
 ```
 
-创建3D轨迹图。
+Creates 3D trajectory plot.
 
-**参数**:
-- `result`: 仿真结果
-- `table`: 球桌配置
-- `net`: 球网配置
-- `ball_color`: 球体颜色
-- `ball_size`: 球体大小
-- `scene_margin`: 场景边距
+**Parameters**:
+- `result`: Simulation results
+- `table`: Table configuration
+- `net`: Net configuration
+- `ball_color`: Ball color
+- `ball_size`: Ball size
+- `scene_margin`: Scene margin
 
-**返回值**: matplotlib Figure 对象
+**Returns**: matplotlib Figure object
 
 #### animate_trajectory_3d()
 
@@ -220,26 +220,26 @@ def animate_trajectory_3d(
 ) -> None
 ```
 
-创建3D轨迹动画。
+Creates 3D trajectory animation.
 
-**参数**:
-- `result`: 仿真结果
-- `table`: 球桌配置
-- `net`: 球网配置
-- `filename`: 输出文件名
-- `fps`: 帧率
-- `skip`: 帧跳跃间隔
+**Parameters**:
+- `result`: Simulation results
+- `table`: Table configuration
+- `net`: Net configuration
+- `filename`: Output filename
+- `fps`: Frames per second
+- `skip`: Frame skip interval
 
-### 数据结构
+### Data Structures
 
 #### BallState
 
 ```python
 @dataclass
 class BallState:
-    position: np.ndarray  # (x, y, z) 位置
-    velocity: np.ndarray  # (vx, vy, vz) 速度
-    omega: np.ndarray     # (ωx, ωy, ωz) 角速度
+    position: np.ndarray  # (x, y, z) position
+    velocity: np.ndarray  # (vx, vy, vz) velocity
+    omega: np.ndarray     # (ωx, ωy, ωz) angular velocity
 ```
 
 #### Table
@@ -247,11 +247,11 @@ class BallState:
 ```python
 @dataclass
 class Table:
-    height: float      # 桌面高度
-    length: float      # 长度 (x方向)
-    width: float       # 宽度 (y方向)
-    restitution: float # 恢复系数
-    friction: float    # 摩擦系数
+    height: float      # table surface height
+    length: float      # length (x direction)
+    width: float       # width (y direction)
+    restitution: float # restitution coefficient
+    friction: float    # friction coefficient
 ```
 
 #### StrokeParams
@@ -259,14 +259,14 @@ class Table:
 ```python
 @dataclass
 class StrokeParams:
-    target_x: float           # 击球目标x位置
-    strike_height: float      # 击球高度
-    racket_angle: float       # 球拍角度 (弧度)
-    swing_speed: float        # 挥拍速度
-    swing_direction: np.ndarray # 挥拍方向
-    rubber_type: RubberType   # 胶皮类型
-    spin_intent: str          # 旋转意图
-    mode: str = "custom"      # 击球模式
+    target_x: float           # target x position for stroke
+    strike_height: float      # strike height
+    racket_angle: float       # racket angle (radians)
+    swing_speed: float        # swing speed
+    swing_direction: np.ndarray # swing direction
+    rubber_type: RubberType   # rubber type
+    spin_intent: str          # spin intent
+    mode: str = "custom"      # stroke mode
 ```
 
 #### SimulationResult
@@ -274,36 +274,36 @@ class StrokeParams:
 ```python
 @dataclass
 class SimulationResult:
-    ball_history: Dict[str, np.ndarray]    # 球体轨迹历史
-    racket_a_history: Dict[str, np.ndarray] # A选手球拍历史
-    racket_b_history: Dict[str, np.ndarray] # B选手球拍历史
-    events: List[Tuple[float, EventType, str]] # 事件列表
-    net_crossings: int     # 过网次数
-    table_bounces: int     # 桌反弹次数
-    rally_count: int       # 回合数
-    final_event: EventType # 最终事件
-    winner: Optional[Player] = None      # 获胜者
-    winner_reason: str = ""              # 获胜原因
+    ball_history: Dict[str, np.ndarray]    # ball trajectory history
+    racket_a_history: Dict[str, np.ndarray] # Player A racket history
+    racket_b_history: Dict[str, np.ndarray] # Player B racket history
+    events: List[Tuple[float, EventType, str]] # event list
+    net_crossings: int     # net crossing count
+    table_bounces: int     # table bounce count
+    rally_count: int       # rally count
+    final_event: EventType # final event
+    winner: Optional[Player] = None      # winner
+    winner_reason: str = ""              # win reason
 ```
 
-## 枚举类型
+## Enumeration Types
 
 ### RubberType
-- `INVERTED`: 反胶 (高旋转，进攻性)
-- `PIMPLED`: 生胶 (中等旋转，控制性)
-- `ANTISPIN`: 防弧胶 (低旋转，防守性)
+- `INVERTED`: Inverted rubber (high spin, offensive)
+- `PIMPLED`: Pimpled rubber (medium spin, control)
+- `ANTISPIN`: Anti-spin rubber (low spin, defensive)
 
 ### EventType
-- `NONE = 0`: 无事件
-- `TABLE_BOUNCE = 1`: 桌反弹
-- `RACKET_A_HIT = 2`: A选手击球
-- `RACKET_B_HIT = 3`: B选手击球
-- `NET_HIT = 4`: 触网
-- `NET_CROSS_SUCCESS = 5`: 成功过网
-- `NET_CROSS_FAIL = 6`: 过网失败
-- `OUT_OF_BOUNDS = 7`: 出界
-- `DOUBLE_BOUNCE = 8`: 双反弹
+- `NONE = 0`: No event
+- `TABLE_BOUNCE = 1`: Table bounce
+- `RACKET_A_HIT = 2`: Player A hit
+- `RACKET_B_HIT = 3`: Player B hit
+- `NET_HIT = 4`: Net touch
+- `NET_CROSS_SUCCESS = 5`: Successful net crossing
+- `NET_CROSS_FAIL = 6`: Net crossing failure
+- `OUT_OF_BOUNDS = 7`: Out of bounds
+- `DOUBLE_BOUNCE = 8`: Double bounce
 
 ### Player
-- `A`: 选手A (负x侧)
-- `B`: 选手B (正x侧)
+- `A`: Player A (negative x side)
+- `B`: Player B (positive x side)

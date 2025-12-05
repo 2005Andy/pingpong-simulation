@@ -1,205 +1,205 @@
-# 乒乓球三维飞行仿真系统架构文档
+# PingPong 3D Flight Simulation System Architecture Documentation
 
-## 项目概述
+## Project Overview
 
-本项目是一个基于物理原理的乒乓球三维飞行轨迹仿真系统，实现了完整的乒乓球运动物理学模型，包括空气动力学、碰撞检测、球拍交互等。系统采用模块化设计，支持多场景仿真和详细的数据输出。
+This project is a physics-based 3D ping-pong ball trajectory simulation system that implements a complete table tennis physics model, including aerodynamics, collision detection, and racket interaction. The system uses modular design and supports multi-scenario simulation with detailed data output.
 
-## 核心架构
+## Core Architecture
 
-### 模块化设计原则
+### Modular Design Principles
 
-项目采用严格的模块化架构，每个模块职责单一，便于维护、测试和扩展：
+The project adopts a strict modular architecture where each module has a single responsibility, making it easy to maintain, test, and extend:
 
 ```
-乒乓球仿真系统/
-├── constants.py          # 物理常数和参数定义
-├── ball_types.py         # 数据结构和类型定义
-├── physics.py           # 物理计算引擎
-├── simulation.py        # 仿真控制引擎
-├── racket_control.py    # 球拍控制逻辑
-├── scenarios.py         # 场景配置管理
-├── visualization.py     # 数据可视化和输出
-└── pingpong_main.py     # 命令行界面
+PingPong Simulation System/
+├── constants.py          # Physical constants and parameter definitions
+├── ball_types.py         # Data structures and type definitions
+├── physics.py           # Physics calculation engine
+├── simulation.py        # Simulation control engine
+├── racket_control.py    # Racket control logic
+├── scenarios.py         # Scenario configuration management
+├── visualization.py     # Data visualization and output
+└── pingpong_main.py     # Command-line interface
 ```
 
-### 模块详细说明
+### Module Detailed Description
 
-#### 1. constants.py - 物理常数定义
+#### 1. constants.py - Physical Constants Definition
 
-**功能**: 集中管理所有物理常数和系统参数
-**关键常量**:
+**Function**: Centralized management of all physical constants and system parameters
+**Key Constants**:
 
-- **空气动力学参数**:
-  - `AIR_DENSITY = 1.225` (kg/m³, 标准大气密度)
-  - `GRAVITY = [0, 0, -9.81]` (m/s², 重力加速度)
-  - `DRAG_COEFF = 0.40` (阻力系数)
-  - `MAGNUS_COEFF = 0.20` (马格努斯效应系数)
+- **Aerodynamic Parameters**:
+  - `AIR_DENSITY = 1.225` (kg/m³, standard atmospheric density)
+  - `GRAVITY = [0, 0, -9.81]` (m/s², gravitational acceleration)
+  - `DRAG_COEFF = 0.40` (drag coefficient)
+  - `MAGNUS_COEFF = 0.20` (Magnus effect coefficient)
 
-- **球体参数 (ITTF标准)**:
-  - `BALL_RADIUS = 0.020` (m, 球半径)
-  - `BALL_MASS = 0.0027` (kg, 球质量)
-  - `BALL_INERTIA_FACTOR = 2/3` (转动惯量因子)
+- **Ball Parameters (ITTF Standard)**:
+  - `BALL_RADIUS = 0.020` (m, ball radius)
+  - `BALL_MASS = 0.0027` (kg, ball mass)
+  - `BALL_INERTIA_FACTOR = 2/3` (rotational inertia factor)
 
-- **球桌参数 (ITTF标准)**:
-  - `TABLE_LENGTH = 2.74` (m, 球桌长度)
-  - `TABLE_WIDTH = 1.525` (m, 球桌宽度)
-  - `TABLE_HEIGHT = 0.76` (m, 球桌高度)
-  - `NET_HEIGHT = 0.1525` (m, 球网高度)
+- **Table Parameters (ITTF Standard)**:
+  - `TABLE_LENGTH = 2.74` (m, table length)
+  - `TABLE_WIDTH = 1.525` (m, table width)
+  - `TABLE_HEIGHT = 0.76` (m, table height)
+  - `NET_HEIGHT = 0.1525` (m, net height)
 
-- **球拍参数**:
-  - `RACKET_RADIUS = 0.085` (m, 球拍半径)
-  - 不同胶皮类型的物理属性 (反胶、生胶、防弧)
+- **Racket Parameters**:
+  - `RACKET_RADIUS = 0.085` (m, racket radius)
+  - Different rubber type physical properties (inverted, pimpled, anti-spin)
 
-- **仿真参数**:
-  - `TIME_STEP = 5e-5` (s, 时间步长)
-  - `MAX_TIME = 10.0` (s, 最大仿真时间)
+- **Simulation Parameters**:
+  - `TIME_STEP = 5e-5` (s, time step)
+  - `MAX_TIME = 10.0` (s, maximum simulation time)
 
-#### 2. ball_types.py - 数据结构定义
+#### 2. ball_types.py - Data Structure Definition
 
-**核心数据类**:
+**Core Data Classes**:
 
-- **BallState**: 球体状态 (位置、速度、角速度)
-- **Table**: 球桌几何 (尺寸、材质属性)
-- **Net**: 球网定义 (高度、长度)
-- **RacketState**: 球拍状态 (位置、法向量、材质属性)
-- **StrokeParams**: 击球参数 (目标位置、球拍角度、挥拍速度)
-- **SimulationResult**: 仿真结果 (轨迹历史、事件日志)
+- **BallState**: Ball state (position, velocity, angular velocity)
+- **Table**: Table geometry (dimensions, material properties)
+- **Net**: Net definition (height, length)
+- **RacketState**: Racket state (position, normal vector, material properties)
+- **StrokeParams**: Stroke parameters (target position, racket angle, swing speed)
+- **SimulationResult**: Simulation results (trajectory history, event log)
 
-**枚举类型**:
-- **RubberType**: 胶皮类型 (INVERTED, PIMPLED, ANTISPIN)
-- **EventType**: 事件类型 (TABLE_BOUNCE, RACKET_HIT, NET_COLLISION等)
-- **Player**: 选手标识 (A, B)
+**Enumeration Types**:
+- **RubberType**: Rubber types (INVERTED, PIMPLED, ANTISPIN)
+- **EventType**: Event types (TABLE_BOUNCE, RACKET_HIT, NET_COLLISION, etc.)
+- **Player**: Player identifiers (A, B)
 
-#### 3. physics.py - 物理计算引擎
+#### 3. physics.py - Physics Calculation Engine
 
-**空气动力学模型**:
+**Aerodynamic Model**:
 ```python
 def aerodynamic_acceleration(velocity, omega):
-    # 阻力: F_drag = -0.5 * ρ * v² * S * C_d * v̂
-    # 马格努斯力: F_magnus = ρ * R³ * C_Ω * (ω × v)
+    # Drag: F_drag = -0.5 * ρ * v² * S * C_d * v̂
+    # Magnus force: F_magnus = ρ * R³ * C_Ω * (ω × v)
     return gravity + drag + magnus_force
 ```
 
-**碰撞检测系统**:
-- **平面碰撞**: 球桌碰撞，使用脉冲-动量法
-- **圆形球拍碰撞**: 球拍与球的交互
-- **球网检测**: 轨迹穿越检测
+**Collision Detection System**:
+- **Plane Collision**: Table collision using impulse-momentum method
+- **Circular Racket Collision**: Racket-ball interaction
+- **Net Detection**: Trajectory crossing detection
 
-**数值积分**:
-- **RK4方法**: 四阶龙格-库塔积分，保证数值稳定性
+**Numerical Integration**:
+- **RK4 Method**: 4th-order Runge-Kutta integration for numerical stability
 
-#### 4. simulation.py - 仿真控制引擎
+#### 4. simulation.py - Simulation Control Engine
 
-**主仿真循环**:
+**Main Simulation Loop**:
 ```python
 while t <= max_time:
-    # 1. 更新球拍运动
-    # 2. 记录状态
-    # 3. 检测事件 (网碰撞、桌碰撞、球拍碰撞)
-    # 4. 积分球体运动
-    # 5. 检查终止条件
+    # 1. Update racket movement
+    # 2. Record state
+    # 3. Detect events (net collision, table collision, racket collision)
+    # 4. Integrate ball motion
+    # 5. Check termination conditions
 ```
 
-**事件驱动机制**:
-- **网穿越事件**: 成功/失败穿越检测
-- **球桌反弹事件**: 记录反弹位置和物理
-- **球拍击球事件**: 记录击球和选手交替
-- **出界事件**: 球体离开有效区域
+**Event-Driven Mechanism**:
+- **Net Crossing Events**: Success/failure crossing detection
+- **Table Bounce Events**: Record bounce position and physics
+- **Racket Hit Events**: Record hits and player alternation
+- **Out-of-Bounds Events**: Ball leaves valid area
 
-#### 5. racket_control.py - 球拍控制逻辑
+#### 5. racket_control.py - Racket Control Logic
 
-**击球模式定义**:
-- **flick**: 轻拉 (控制型击球)
-- **topspin**: 上旋 (进攻型击球)
-- **backspin**: 下旋 (防守型击球)
-- **flat**: 平击 (快速击球)
+**Stroke Mode Definitions**:
+- **flick**: Light push (control-oriented stroke)
+- **topspin**: Topspin (offensive stroke)
+- **backspin**: Backspin (defensive stroke)
+- **flat**: Flat hit (fast stroke)
 
-**智能决策系统**:
+**Intelligent Decision System**:
 ```python
 def should_player_hit(ball_pos, ball_vel, player, stroke):
-    # 基于球位置、速度、击球参数判断是否击球
-    # 考虑球拍反应时间和击球窗口
+    # Determine if player should hit based on ball position, velocity, stroke parameters
+    # Consider racket reaction time and hitting window
 ```
 
-#### 6. scenarios.py - 场景配置管理
+#### 6. scenarios.py - Scenario Configuration Management
 
-**预定义场景**:
-- **serve**: 发球场景 (多种发球方式)
-- **custom**: 自定义初始条件
-- **trajectory**: 轨迹分析 (无球拍交互)
+**Predefined Scenarios**:
+- **serve**: Serve scenarios (various serve types)
+- **custom**: Custom initial conditions
+- **trajectory**: Trajectory analysis (no racket interaction)
 
-**参数化配置**:
-- 位置、速度、角速度的灵活设置
-- 击球序列的自定义配置
+**Parameterized Configuration**:
+- Flexible setting of position, velocity, angular velocity
+- Custom stroke sequence configuration
 
-#### 7. visualization.py - 可视化引擎
+#### 7. visualization.py - Visualization Engine
 
-**输出格式**:
-- **CSV导出**: 轨迹数据 (位置、速度、事件)
-- **3D可视化**: matplotlib 3D绘图
-- **动画生成**: MP4/GIF 格式 (需要FFmpeg)
+**Output Formats**:
+- **CSV Export**: Trajectory data (position, velocity, events)
+- **3D Visualization**: Matplotlib 3D plotting
+- **Animation Generation**: MP4/GIF formats (requires FFmpeg)
 
-**可视化组件**:
-- 球桌、球网的3D渲染
-- 球拍位置和轨迹显示
-- 事件标记 (反弹点、击球点)
+**Visualization Components**:
+- 3D rendering of table and net
+- Racket position and trajectory display
+- Event markers (bounce points, hit points)
 
-## 物理模型详解
+## Physics Model Details
 
-### 空气动力学
+### Aerodynamics
 
-球体在空气中的运动遵循Navier-Stokes方程的简化形式：
+The ball motion in air follows a simplified form of the Navier-Stokes equations:
 
 ```
 m dv/dt = m g - 0.5 ρ v² S C_d v̂ + ρ R³ C_Ω (ω × v)
 ```
 
-其中：
-- **阻力项**: 与速度平方成正比
-- **马格努斯力**: 旋转产生的升力，与角速度和速度的叉积成正比
+Where:
+- **Drag term**: Proportional to velocity squared
+- **Magnus force**: Rotation-induced lift, proportional to cross product of angular velocity and velocity
 
-### 碰撞模型
+### Collision Model
 
-**球桌碰撞**:
-- **法向恢复**: ε = 0.90 (ITTF标准)
-- **切向摩擦**: μ = 0.25 (考虑滑动/粘着/过旋状态)
+**Table Collision**:
+- **Normal restitution**: ε = 0.90 (ITTF standard)
+- **Tangential friction**: μ = 0.25 (considering sliding/sticking/over-spin states)
 
-**球拍碰撞**:
-- 不同胶皮类型具有不同的物理属性
-- 支持复杂的旋转传递机制
+**Racket Collision**:
+- Different rubber types have different physical properties
+- Supports complex spin transfer mechanisms
 
-### 乒乓球规则实现
+### Table Tennis Rules Implementation
 
-系统完整实现了ITTF乒乓球规则：
-- **发球规则**: 必须先在发球方桌面上反弹
-- **得分规则**: 双反弹、网击、出界判断
-- **回合转换**: 成功击球后交换发球权
+The system fully implements ITTF table tennis rules:
+- **Service rules**: Must bounce on server's side first
+- **Scoring rules**: Double bounce, net touch, out-of-bounds judgment
+- **Rally alternation**: Switch serve after successful hits
 
-## 技术特性
+## Technical Features
 
-### 性能优化
-- **自适应时间步长**: 根据运动剧烈程度调整计算精度
-- **事件驱动**: 只在关键时刻进行详细计算
-- **向量化计算**: 使用NumPy进行高效数值计算
+### Performance Optimization
+- **Adaptive time stepping**: Adjust calculation precision based on motion intensity
+- **Event-driven**: Detailed calculations only at critical moments
+- **Vectorized computation**: Efficient numerical calculations using NumPy
 
-### 可扩展性
-- **模块化设计**: 易于添加新运动项目
-- **参数化配置**: 支持不同球类和规则
-- **插件架构**: 可扩展新的物理模型
+### Extensibility
+- **Modular design**: Easy to add new sports
+- **Parameterized configuration**: Support for different ball types and rules
+- **Plugin architecture**: Extensible with new physics models
 
-### 数据完整性
-- **轨迹记录**: 完整的位置、速度、角速度历史
-- **事件日志**: 所有碰撞和规则事件的详细记录
-- **元数据**: 仿真参数和环境条件的完整记录
+### Data Integrity
+- **Trajectory recording**: Complete position, velocity, angular velocity history
+- **Event logging**: Detailed records of all collisions and rule events
+- **Metadata**: Complete records of simulation parameters and environmental conditions
 
-## 质量保证
+## Quality Assurance
 
-### 测试覆盖
-- **单元测试**: 各模块独立功能测试
-- **集成测试**: 完整仿真流程验证
-- **物理验证**: 与解析解和实验数据对比
+### Test Coverage
+- **Unit tests**: Independent functionality testing for each module
+- **Integration tests**: Complete simulation process validation
+- **Physics validation**: Comparison with analytical solutions and experimental data
 
-### 代码质量
-- **类型提示**: 完整的类型注解
-- **文档字符串**: 详细的函数和类文档
-- **代码规范**: 遵循Google Python风格指南
+### Code Quality
+- **Type hints**: Complete type annotations
+- **Docstrings**: Detailed function and class documentation
+- **Code standards**: Following Google Python style guide

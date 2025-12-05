@@ -1,203 +1,203 @@
-# 用户指南
+# User Guide
 
-## 快速开始
+## Quick Start
 
-### 环境要求
+### Environment Requirements
 
 - Python 3.8+
 - NumPy 1.21+
 - Pandas 1.3+
 - Matplotlib 3.5+
 
-### 安装依赖
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 基本运行
+### Basic Usage
 
 ```bash
-# 发球仿真
+# Serve simulation
 python pingpong_main.py --serve-mode fh_under
 
-# 自定义初始条件
+# Custom initial conditions
 python pingpong_main.py --serve-mode custom --pos -1.2 0 0.9 --vel 8 0 3 --omega 0 150 0
 
-# 轨迹分析工具
+# Trajectory analysis tool
 python analyze_impact.py --speed 5.0 --angle 30.0 --spin 0 150 0
 ```
 
-## 命令行参数详解
+## Command Line Parameters Details
 
-### pingpong_main.py 参数
+### pingpong_main.py Parameters
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `--serve-mode` | str | fh_under | 发球模式 (fh_under, fast_long, custom) |
-| `--output-dir` | str | ./output | 输出目录 |
-| `--duration` | float | 10.0 | 仿真时长(秒) |
-| `--dt` | float | 5e-5 | 时间步长(秒) |
-| `--pos X Y Z` | float×3 | - | 自定义初始位置 |
-| `--vel VX VY VZ` | float×3 | - | 自定义初始速度 |
-| `--omega WX WY WZ` | float×3 | - | 自定义初始角速度 |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--serve-mode` | str | fh_under | Serve mode (fh_under, fast_long, custom) |
+| `--output-dir` | str | ./output | Output directory |
+| `--duration` | float | 10.0 | Simulation duration (seconds) |
+| `--dt` | float | 5e-5 | Time step (seconds) |
+| `--pos X Y Z` | float×3 | - | Custom initial position |
+| `--vel VX VY VZ` | float×3 | - | Custom initial velocity |
+| `--omega WX WY WZ` | float×3 | - | Custom initial angular velocity |
 
-### analyze_impact.py 参数
+### analyze_impact.py Parameters
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `--speed` | float | 5.0 | 初始速度(m/s) |
-| `--angle` | float | 45.0 | 发射角度(度) |
-| `--spin WX WY WZ` | float×3 | 0 50 0 | 初始旋转(rad/s) |
-| `--out` | str | output/analysis | 输出目录 |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--speed` | float | 5.0 | Initial speed (m/s) |
+| `--angle` | float | 45.0 | Launch angle (degrees) |
+| `--spin WX WY WZ` | float×3 | 0 50 0 | Initial spin (rad/s) |
+| `--out` | str | output/analysis | Output directory |
 
-## 发球模式说明
+## Serve Mode Description
 
-### fh_under (正手underspin发球)
-- **特点**: 低弧线，旋转向下
-- **适用**: 控制节奏，开局战术
+### fh_under (Forehand underspin serve)
+- **Characteristics**: Low arc, downward spin
+- **Usage**: Control pace, opening tactics
 
-### fast_long (快速长球发球)
-- **特点**: 高速直线，稍带上旋
-- **适用**: 抢攻战术，压制对手
+### fast_long (Fast long serve)
+- **Characteristics**: High speed, slight topspin
+- **Usage**: Aggressive tactics, pressuring opponent
 
-### custom (自定义模式)
-- **特点**: 完全自定义初始条件
-- **适用**: 研究特定击球效果
+### custom (Custom mode)
+- **Characteristics**: Fully customizable initial conditions
+- **Usage**: Research specific stroke effects
 
-## 输出文件说明
+## Output Files Description
 
-### CSV 数据文件
+### CSV Data Files
 
 #### ball_trajectory.csv
-| 列名 | 说明 | 单位 |
-|------|------|------|
-| t | 时间 | s |
-| x, y, z | 位置坐标 | m |
-| vx, vy, vz | 速度分量 | m/s |
-| wx, wy, wz | 角速度分量 | rad/s |
-| event | 事件代码 | - |
+| Column | Description | Unit |
+|--------|-------------|------|
+| t | Time | s |
+| x, y, z | Position coordinates | m |
+| vx, vy, vz | Velocity components | m/s |
+| wx, wy, wz | Angular velocity components | rad/s |
+| event | Event code | - |
 
 #### racket_trajectory_A/B.csv
-| 列名 | 说明 | 单位 |
-|------|------|------|
-| t | 时间 | s |
-| x, y, z | 球拍中心位置 | m |
-| vx, vy, vz | 球拍速度 | m/s |
-| nx, ny, nz | 球拍法向量 | - |
+| Column | Description | Unit |
+|--------|-------------|------|
+| t | Time | s |
+| x, y, z | Racket center position | m |
+| vx, vy, vz | Racket velocity | m/s |
+| nx, ny, nz | Racket normal vector | - |
 
-### 事件代码定义
+### Event Code Definitions
 
-| 代码 | 事件类型 | 说明 |
-|------|----------|------|
-| 0 | NONE | 无事件 |
-| 1 | TABLE_BOUNCE | 球桌反弹 |
-| 2 | RACKET_A_HIT | A选手击球 |
-| 3 | RACKET_B_HIT | B选手击球 |
-| 4 | NET_HIT | 触网 |
-| 5 | NET_CROSS_SUCCESS | 成功过网 |
-| 6 | NET_CROSS_FAIL | 过网失败 |
-| 7 | OUT_OF_BOUNDS | 出界 |
+| Code | Event Type | Description |
+|------|------------|-------------|
+| 0 | NONE | No event |
+| 1 | TABLE_BOUNCE | Table bounce |
+| 2 | RACKET_A_HIT | Player A hit |
+| 3 | RACKET_B_HIT | Player B hit |
+| 4 | NET_HIT | Net touch |
+| 5 | NET_CROSS_SUCCESS | Successful net crossing |
+| 6 | NET_CROSS_FAIL | Net crossing failure |
+| 7 | OUT_OF_BOUNDS | Out of bounds |
 
-## 可视化输出
+## Visualization Output
 
-### 3D轨迹图 (trajectory.mp4)
-- 显示球体完整运动轨迹
-- 标记起点、终点和反弹位置
-- 实时显示球拍位置和运动
+### 3D Trajectory Plot (trajectory.mp4)
+- Shows complete ball motion trajectory
+- Marks start/end points and bounce positions
+- Real-time display of racket position and movement
 
-### 轨迹分析图 (analyze_impact.py)
-- **XZ平面图**: 侧视图，显示轨迹弧线
-- **XY平面图**: 俯视图，显示平面轨迹
+### Trajectory Analysis Plots (analyze_impact.py)
+- **XZ plane plot**: Side view, shows trajectory arc
+- **XY plane plot**: Top view, shows planar trajectory
 
-## 高级用法
+## Advanced Usage
 
-### 自定义击球序列
+### Custom Stroke Sequences
 
-修改 `scenarios.py` 中的击球参数：
+Modify stroke parameters in `scenarios.py`:
 
 ```python
 CUSTOM_STROKES_A = [
-    ("flick", "inverted"),      # 轻拉，反胶
-    ("topspin", "inverted"),    # 上旋，反胶
-    ("backspin", "pimpled"),    # 下旋，生胶
+    ("flick", "inverted"),      # Light push, inverted rubber
+    ("topspin", "inverted"),    # Topspin, inverted rubber
+    ("backspin", "pimpled"),    # Backspin, pimpled rubber
 ]
 
 CUSTOM_STROKES_B = [
-    ("counter_loop", "inverted"),  # 接发球上旋
-    ("smash", "inverted"),         # 扣杀
+    ("counter_loop", "inverted"),  # Counter loop
+    ("smash", "inverted"),         # Smash
 ]
 ```
 
-### 物理参数调整
+### Physics Parameter Adjustment
 
-修改 `constants.py` 中的参数：
+Modify parameters in `constants.py`:
 
 ```python
-# 调整空气阻力
-DRAG_COEFF = 0.35  # 减小阻力，增加飞行距离
+# Adjust air drag
+DRAG_COEFF = 0.35  # Reduce drag, increase flight distance
 
-# 调整马格努斯效应
-MAGNUS_COEFF = 0.25  # 增强旋转效果
+# Adjust Magnus effect
+MAGNUS_COEFF = 0.25  # Enhance spin effects
 
-# 调整球桌属性
-TABLE_RESTITUTION = 0.95  # 增加反弹高度
+# Adjust table properties
+TABLE_RESTITUTION = 0.95  # Increase bounce height
 ```
 
-### 批量分析
+### Batch Analysis
 
-使用脚本进行参数扫描：
+Use scripts for parameter sweeps:
 
 ```bash
-# 不同角度分析
+# Different angle analysis
 for angle in 20 30 45 60; do
     python analyze_impact.py --angle $angle --out results/angle_$angle
 done
 
-# 不同速度分析
+# Different speed analysis
 for speed in 3 5 8 12; do
     python analyze_impact.py --speed $speed --out results/speed_$speed
 done
 ```
 
-## 故障排除
+## Troubleshooting
 
-### 常见问题
+### Common Issues
 
-1. **动画生成失败**
-   - 安装FFmpeg: `conda install ffmpeg` 或 `pip install ffmpeg-python`
+1. **Animation generation failed**
+   - Install FFmpeg: `conda install ffmpeg` or `pip install ffmpeg-python`
 
-2. **内存不足**
-   - 减小 `RECORD_INTERVAL` 值
-   - 缩短仿真时间 `MAX_TIME`
+2. **Out of memory**
+   - Reduce `RECORD_INTERVAL` value
+   - Shorten simulation time `MAX_TIME`
 
-3. **数值不稳定**
-   - 减小 `TIME_STEP` 值
-   - 检查初始条件合理性
+3. **Numerical instability**
+   - Reduce `TIME_STEP` value
+   - Check initial conditions reasonableness
 
-### 调试模式
+### Debug Mode
 
-启用详细输出：
+Enable verbose output:
 ```bash
 python pingpong_main.py --serve-mode custom --dt 1e-4
 ```
 
-查看中间状态：
+View intermediate states:
 ```python
-# 在代码中添加调试输出
+# Add debug output in code
 print(f"t={t:.3f}s: pos={ball.position}, vel={ball.velocity}")
 ```
 
-## 性能优化
+## Performance Optimization
 
-### 计算效率
-- **时间步长**: 默认5e-5s，在保证精度的前提下可适当增大
-- **记录间隔**: RECORD_INTERVAL=20，可根据需要调整
-- **仿真时长**: 根据研究需要合理设置MAX_TIME
+### Computational Efficiency
+- **Time step**: Default 5e-5s, can increase while maintaining accuracy
+- **Record interval**: RECORD_INTERVAL=20, adjustable as needed
+- **Simulation duration**: Set MAX_TIME according to research needs
 
-### 内存管理
-- 大规模仿真建议使用HDF5格式存储数据
-- 可分批处理大量轨迹数据
+### Memory Management
+- Large-scale simulations recommend HDF5 format for data storage
+- Process large trajectory datasets in batches
 
-### 并行处理
-系统支持多核并行，可用于参数扫描研究。
+### Parallel Processing
+System supports multi-core parallel processing for parameter sweep studies.
