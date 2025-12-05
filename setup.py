@@ -10,13 +10,13 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="pingpong-simulation",
-    version="1.0.0",
+    version="0.1.0",
     author="PingPong Simulation Team",
-    author_email="",
+    author_email="1532547617@qq.com",
     description="3D ping-pong ball flight simulation with realistic physics",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/username/pingpong-simulation",
+    url="https://github.com/2005Andy/pingpong-simulation",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",

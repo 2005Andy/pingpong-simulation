@@ -18,7 +18,7 @@ If you discover a security vulnerability in this project, please help us by repo
 **Please DO NOT report security vulnerabilities through public GitHub issues.**
 
 Instead, please report security vulnerabilities by emailing:
-- **Email**: pingpong-simulation-security@example.com
+- **Email**: 1532547617@qq.com
 - **Subject**: `[SECURITY] Vulnerability Report: PingPong Simulation`
 
 ### What to Include
@@ -69,6 +69,6 @@ When using this simulation software:
 
 ## Contact
 
-For security-related questions or concerns, please contact us at pingpong-simulation-security@example.com.
+For security-related questions or concerns, please contact us at 1532547617@qq.com.
 
 Thank you for helping keep our community safe!
