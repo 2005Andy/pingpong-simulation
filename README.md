@@ -70,6 +70,8 @@ Welcome to contribute code! Please check:
 
 - [Contribution Guide](CONTRIBUTING.md) - How to participate in project development
 - [Developer Guide](doc/developer_guide.md) - Code standards and best practices
+- [Code of Conduct](CODE_OF_CONDUCT.md) - Community standards and expectations
+- [Security Policy](SECURITY.md) - How to report security vulnerabilities
 - [Issues](../../issues) - Report issues or suggest new features
 
 ## 📄 License

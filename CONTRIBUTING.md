@@ -208,27 +208,11 @@ Closes #123"
 
 ## Code of Conduct
 
-### Our Commitment
+This project has adopted a Code of Conduct that we expect project participants to adhere to. Please read the [full text](CODE_OF_CONDUCT.md) so that you can understand what actions will and will not be tolerated.
 
-We are committed to providing a harassment-free collaborative environment for everyone, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, or sexual identity and orientation.
+## Security
 
-### Standards
-
-Behaviors that contribute to creating a positive environment include:
-
-- Using welcoming and inclusive language
-- Respecting different viewpoints and experiences
-- Gracefully accepting constructive criticism
-- Focusing on what is best for the community
-- Showing empathy towards other community members
-
-Unacceptable behaviors include:
-
-- Use of sexualized language or imagery and unwelcome sexual attention
-- Trolling, insulting/derogatory comments
-- Public or private harassment
-- Publishing others' private information without explicit permission
-- Other conduct which could reasonably be considered inappropriate in a professional setting
+If you discover a security vulnerability in this project, please follow our [Security Policy](SECURITY.md) for reporting it responsibly.
 
 ## License
 
