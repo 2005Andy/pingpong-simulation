@@ -4,36 +4,32 @@
 
 ```
 PingPong Simulation System/
+├── src/                    # Source code package
+│   ├── __init__.py
+│   ├── constants.py        # Physical constants and parameters
+│   ├── ball_types.py       # Data structures and types
+│   ├── physics.py          # Physics calculation engine
+│   ├── simulation.py       # Simulation control engine
+│   ├── racket_control.py   # Racket control logic
+│   ├── scenarios.py        # Scenario configuration
+│   └── visualization.py    # Data visualization and output
+├── tests/                  # Test directory
+│   ├── __init__.py
+│   └── test_basic.py       # Unit tests
 ├── doc/                    # Documentation directory
 │   ├── architecture.md     # Architecture documentation
 │   ├── physics_model.md    # Physics model details
 │   ├── user_guide.md       # User guide
 │   ├── api_reference.md    # API reference
 │   └── developer_guide.md  # Developer guide
-├── src/                    # Source code directory (recommended)
-│   ├── __init__.py
-│   ├── constants.py
-│   ├── ball_types.py
-│   ├── physics.py
-│   ├── simulation.py
-│   ├── racket_control.py
-│   ├── scenarios.py
-│   └── visualization.py
-├── tests/                  # Test directory
-│   ├── test_physics.py
-│   ├── test_simulation.py
-│   └── conftest.py
-├── examples/               # Example scripts
-│   ├── basic_simulation.py
-│   └── parameter_study.py
 ├── pingpong_main.py        # Main entry script
-├── analyze_impact.py       # Analysis tool
+├── analyze_impact.py       # Trajectory analysis tool
 ├── requirements.txt        # Dependency list
 ├── setup.py               # Installation script
-├── LICENSE                # License
-├── README.md              # Project description
-├── CONTRIBUTING.md        # Contribution guide
-└── .gitignore            # Ignore file
+├── LICENSE                 # License
+├── README.md               # Project description
+├── CONTRIBUTING.md         # Contribution guide
+└── .gitignore             # Ignore file
 ```
 
 ## Development Environment Setup
@@ -134,7 +130,7 @@ def aerodynamic_acceleration(
 ### Test Structure
 
 ```python
-# tests/test_physics.py
+# tests/test_basic.py
 import numpy as np
 import pytest
 from src.physics import aerodynamic_acceleration
@@ -168,7 +164,7 @@ class TestAerodynamicAcceleration:
 pytest
 
 # Run specific test
-pytest tests/test_physics.py::TestAerodynamicAcceleration::test_zero_velocity
+pytest tests/test_basic.py::TestAerodynamicAcceleration::test_zero_velocity
 
 # With coverage report
 pytest --cov=src --cov-report=html

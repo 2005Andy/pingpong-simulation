@@ -114,7 +114,7 @@ python analyze_impact.py --speed 5.0 --angle 30.0 --spin 0 150 0
 
 ### Custom Stroke Sequences
 
-Modify stroke parameters in `scenarios.py`:
+Modify stroke parameters in `src/scenarios.py`:
 
 ```python
 CUSTOM_STROKES_A = [
@@ -131,7 +131,7 @@ CUSTOM_STROKES_B = [
 
 ### Physics Parameter Adjustment
 
-Modify parameters in `constants.py`:
+Modify parameters in `src/constants.py`:
 
 ```python
 # Adjust air drag

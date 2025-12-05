@@ -7,22 +7,22 @@ for ball trajectory simulations with physics-based interactions.
 from typing import Dict, List, Optional, Tuple
 import numpy as np
 
-from constants import (
+from .constants import (
     PLAYER_A_X, PLAYER_B_X, PLAYER_STRIKE_HEIGHT, TIME_STEP, MAX_TIME,
     RECORD_INTERVAL, RACKET_RADIUS, RUBBER_INVERTED_RESTITUTION,
     RUBBER_INVERTED_FRICTION, BALL_RADIUS,
     RACKET_PREDICTION_DT_MULTIPLIER, RACKET_PREDICTION_MIN_DT, RACKET_PREDICTION_MAX_TIME
 )
-from ball_types import (
+from .ball_types import (
     BallState, Table, Net, RacketState, StrokeParams, Player, RubberType,
     EventType, SimulationResult
 )
-from physics import (
+from .physics import (
     rk4_step, handle_plane_collision, handle_circular_racket_collision,
     check_net_collision, check_table_bounds, update_racket_movement,
     start_racket_movement
 )
-from racket_control import compute_racket_for_stroke, should_player_hit
+from .racket_control import compute_racket_for_stroke, should_player_hit
 
 
 def simulate(

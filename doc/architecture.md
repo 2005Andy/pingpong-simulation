@@ -12,14 +12,19 @@ The project adopts a strict modular architecture where each module has a single 
 
 ```
 PingPong Simulation System/
-├── constants.py          # Physical constants and parameter definitions
-├── ball_types.py         # Data structures and type definitions
-├── physics.py           # Physics calculation engine
-├── simulation.py        # Simulation control engine
-├── racket_control.py    # Racket control logic
-├── scenarios.py         # Scenario configuration management
-├── visualization.py     # Data visualization and output
-└── pingpong_main.py     # Command-line interface
+├── src/
+│   ├── __init__.py
+│   ├── constants.py          # Physical constants and parameter definitions
+│   ├── ball_types.py         # Data structures and type definitions
+│   ├── physics.py           # Physics calculation engine
+│   ├── simulation.py        # Simulation control engine
+│   ├── racket_control.py    # Racket control logic
+│   ├── scenarios.py         # Scenario configuration management
+│   └── visualization.py     # Data visualization and output
+├── pingpong_main.py         # Command-line interface
+├── analyze_impact.py        # Trajectory analysis tool
+├── tests/                   # Unit tests
+└── doc/                     # Documentation
 ```
 
 ### Module Detailed Description

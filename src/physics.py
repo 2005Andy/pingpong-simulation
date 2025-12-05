@@ -10,11 +10,11 @@ This module contains all physics-related calculations including:
 import numpy as np
 from typing import Tuple, Optional
 
-from constants import (
+from .constants import (
     AIR_DENSITY, GRAVITY, BALL_RADIUS, BALL_MASS, DRAG_COEFF, MAGNUS_COEFF,
     BALL_INERTIA_FACTOR, WIND_VELOCITY, RACKET_MAX_SPEED
 )
-from ball_types import BallState, Table, Net, RacketState, EventType
+from .ball_types import BallState, Table, Net, RacketState, EventType
 
 
 def aerodynamic_acceleration(velocity: np.ndarray, omega: np.ndarray) -> np.ndarray:

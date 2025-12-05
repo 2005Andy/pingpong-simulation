@@ -3,9 +3,9 @@
 import numpy as np
 import pytest
 
-from ball_types import BallState, Table, Net
-from physics import aerodynamic_acceleration, rk4_step
-from scenarios import create_table, create_net
+from src.ball_types import BallState, Table, Net
+from src.physics import aerodynamic_acceleration, rk4_step
+from src.scenarios import create_table, create_net
 
 
 class TestBallState:

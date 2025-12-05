@@ -5,14 +5,14 @@ from pathlib import Path
 import os
 
 # Import from project framework
-from constants import (
-    TABLE_LENGTH, TABLE_HEIGHT, BALL_RADIUS, 
+from src.constants import (
+    TABLE_LENGTH, TABLE_HEIGHT, BALL_RADIUS,
     DEFAULT_OUTPUT_DIR
 )
-from ball_types import BallState
-from scenarios import create_table, create_net
-from pingpong_sim import simulate, SimulationResult
-from visualization import animate_trajectory_3d
+from src.ball_types import BallState, SimulationResult
+from src.scenarios import create_table, create_net
+from src.simulation import simulate
+from src.visualization import animate_trajectory_3d
 
 def run_analysis(speed: float, angle: float, spin: list, output_dir: str):
     """

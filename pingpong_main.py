@@ -9,20 +9,20 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from constants import (
+from src.constants import (
     DEFAULT_OUTPUT_DIR, DEFAULT_BALL_CSV, DEFAULT_RACKET_CSV,
     DEFAULT_ANIM_FILE, TIME_STEP, MAX_TIME, CUSTOM_INITIAL_POSITION,
     CUSTOM_INITIAL_VELOCITY, CUSTOM_INITIAL_OMEGA, CUSTOM_STROKES_A, CUSTOM_STROKES_B,
     DEFAULT_SERVE_MODE, DEFAULT_SERVER, DEFAULT_BALL_COLOR, DEFAULT_BALL_SIZE, DEFAULT_SCENE_MARGIN
 )
-from scenarios import create_table, create_net, create_custom_scenario, SERVE_MODE_CHOICES
-from simulation import simulate
-from visualization import (
+from src.scenarios import create_table, create_net, create_custom_scenario, SERVE_MODE_CHOICES
+from src.simulation import simulate
+from src.visualization import (
     print_simulation_summary, save_ball_history_to_csv, save_racket_history_to_csv,
     plot_trajectory_3d, animate_trajectory_3d
 )
-from racket_control import create_custom_strokes
-from ball_types import Player
+from src.racket_control import create_custom_strokes
+from src.ball_types import Player
 
 import matplotlib.pyplot as plt
 

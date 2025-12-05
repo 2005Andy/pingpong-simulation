@@ -7,14 +7,14 @@ decision-making for when to hit the ball.
 import numpy as np
 from typing import Tuple, List, Dict, Any, Optional
 
-from constants import (
+from .constants import (
     RACKET_RADIUS, RUBBER_INVERTED_RESTITUTION, RUBBER_INVERTED_FRICTION,
     RUBBER_PIMPLED_RESTITUTION, RUBBER_PIMPLED_FRICTION,
     RUBBER_ANTISPIN_RESTITUTION, RUBBER_ANTISPIN_FRICTION,
     TABLE_LENGTH, TABLE_HEIGHT, BALL_RADIUS,
     RACKET_STRIKE_HEIGHT_WINDOW, RACKET_STRIKE_X_WINDOW
 )
-from ball_types import RubberType, Player, StrokeParams, RacketState
+from .ball_types import RubberType, Player, StrokeParams, RacketState
 
 
 def get_rubber_properties(rubber_type: RubberType) -> Tuple[float, float]:

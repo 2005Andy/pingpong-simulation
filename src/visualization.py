@@ -12,13 +12,13 @@ from matplotlib.patches import Circle, FancyBboxPatch
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-from constants import (
+from .constants import (
     RACKET_RADIUS, ANIM_FPS, ANIM_SKIP, DEFAULT_BALL_COLOR, DEFAULT_BALL_SIZE,
     DEFAULT_SCENE_MARGIN, TABLE_SURFACE_COLOR, TABLE_STRIPE_COLOR, TABLE_EDGE_COLOR,
     TABLE_LEG_COLOR, TABLE_LEG_WIDTH, TABLE_CENTER_LINE_WIDTH
 )
-from ball_types import SimulationResult, Table, Net, EventType
-from physics import _orthonormal_basis_from_normal
+from .ball_types import SimulationResult, Table, Net, EventType
+from .physics import _orthonormal_basis_from_normal
 
 import numpy as np
 

@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5a2e6456-7a6c-4d1e-9a5d-569fce962331" name="更改" comment="perf: update the parameters so that the number of rounds have surged to 2">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/analyze_impact.py" beforeDir="false" afterPath="$PROJECT_DIR$/analyze_impact.py" afterDir="false" />
-    </list>
+    <list default="true" id="5a2e6456-7a6c-4d1e-9a5d-569fce962331" name="更改" comment="perf: update the parameters so that the number of rounds have surged to 2" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -62,7 +58,7 @@
       <workItem from="1764399627078" duration="2013000" />
       <workItem from="1764402728227" duration="4491000" />
       <workItem from="1764768871842" duration="4930000" />
-      <workItem from="1764920029461" duration="2451000" />
+      <workItem from="1764920029461" duration="3311000" />
     </task>
     <task id="LOCAL-00001" summary="feat: initialize the repository&#10;&#10;this repo are used to simulate the motion of a ball">
       <option name="closed" value="true" />

@@ -7,13 +7,13 @@ different types of ball sports simulations, including table tennis.
 import numpy as np
 from typing import List, Optional, Tuple
 
-from constants import (
+from .constants import (
     TABLE_HEIGHT, TABLE_LENGTH, TABLE_WIDTH, TABLE_RESTITUTION, TABLE_FRICTION,
     NET_HEIGHT, NET_LENGTH, NET_THICKNESS,
     CUSTOM_INITIAL_POSITION, CUSTOM_INITIAL_VELOCITY, CUSTOM_INITIAL_OMEGA, DEFAULT_SERVE_MODE
 )
-from ball_types import BallState, Table, Net, StrokeParams, Player, RubberType
-from racket_control import create_default_stroke
+from .ball_types import BallState, Table, Net, StrokeParams, Player, RubberType
+from .racket_control import create_default_stroke
 
 
 def create_table() -> Table:
