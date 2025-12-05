@@ -3,6 +3,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](doc/)
+[![codecov](https://codecov.io/gh/2005Andy/pingpong-simulation/branch/master/graph/badge.svg)](https://codecov.io/gh/2005Andy/pingpong-simulation)
 
 Physics-based 3D ping-pong ball trajectory simulation system, implementing complete aerodynamics, collision detection, and racket interaction.
 
@@ -84,6 +85,11 @@ This project uses the [MIT License](LICENSE) open source license.
 - Physics model references published scientific literature
 - Thanks to the open source community
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=2005Andy/pingpong-simulation&type=date&legend=top-left)](https://www.star-history.com/#2005Andy/pingpong-simulation&type=date&legend=top-left)
+
 ---
 
 ⭐ If this project is helpful to you, please give it a star!
+
